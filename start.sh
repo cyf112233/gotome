@@ -59,6 +59,9 @@ for V in "${MC_VERSIONS[@]}"; do
     if [[ "$V" == "1.20" || "$V" == "1.20.1" ]]; then
         rm -rf src
         cp -r src2 src
+    elif [[ "$V" == "1.21.6" || "$V" == "1.21.7" || "$V" == "1.21.8" ]]; then
+        rm -rf src
+        cp -r src4 src
     else
         rm -rf src
         cp -r src3 src
