@@ -29,19 +29,10 @@ jobs:
         echo "RELEASE_TITLE=${RELEASE_TITLE}" >> $GITHUB_ENV
     - name: Change gradlew permissions
       run: chmod +x ./gradlew
-    - name: Change gradlew permissions2
+    - name: Change permissions
       run: chmod +x ./start.sh
-    - name: Cache Gradle dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
-    - name: Build with Gradle
-      run: ./start.sh -Pversion=${{ env.TAG_NAME }}
+    - name: Build
+      run: ./start.sh ${{ env.TAG_NAME }}
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
