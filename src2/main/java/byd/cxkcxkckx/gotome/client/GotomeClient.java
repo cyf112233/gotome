@@ -16,6 +16,8 @@ public class GotomeClient {
     public static KeyBinding viewLockKey;
     public static MotionCamera motionCamera = new MotionCamera();
     public static FreeLook freeLook = new FreeLook();
+    private static Perspective lastPerspective = null;
+    private static boolean lastWorldLoaded = false;
 
     public static void init() {
         ConfigManager.load();
@@ -66,6 +68,21 @@ public class GotomeClient {
             freeLook.sensitivity = ConfigManager.config.freeLookSensitivity;
             freeLook.invertY = ConfigManager.config.freeLookInvertY;
             freeLook.onTick();
+            // 检查人称切换或世界加载
+            Perspective currentPerspective = client.options.getPerspective();
+            boolean worldLoaded = client.world != null;
+            if (client.player != null && ConfigManager.config.motionCameraEnabled && !currentPerspective.isFirstPerson()) {
+                if ((lastPerspective != null && lastPerspective.isFirstPerson() && !currentPerspective.isFirstPerson()) || (!lastWorldLoaded && worldLoaded)) {
+                    // 切换到第三人称或刚进入世界，重置相机到玩家上方
+                    byd.cxkcxkckx.gotome.client.GotomeClient.motionCamera.cameraPos = new net.minecraft.util.math.Vec3d(
+                        client.player.getX(),
+                        client.player.getY() + 1.0,
+                        client.player.getZ()
+                    );
+                }
+            }
+            lastPerspective = currentPerspective;
+            lastWorldLoaded = worldLoaded;
         });
     }
 }

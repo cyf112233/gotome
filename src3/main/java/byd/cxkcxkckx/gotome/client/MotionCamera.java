@@ -32,12 +32,16 @@ public class MotionCamera {
     public void update(Vec3d playerPos, float tickDelta) {
         if (MinecraftClient.getInstance().player == null) return;
         if (MinecraftClient.getInstance().player.isSleeping()) {
-            // 睡觉时相机移动到玩家正上方俯视
-            cameraPos = new Vec3d(
+            Vec3d target = new Vec3d(
                 MinecraftClient.getInstance().player.getX(),
                 MinecraftClient.getInstance().player.getY() + 2.5,
                 MinecraftClient.getInstance().player.getZ()
             );
+            if (cameraPos == null) cameraPos = target;
+            cameraPos = cameraPos.lerp(target, 0.2);
+            float currentPitch = MinecraftClient.getInstance().player.getPitch();
+            float lerpedPitch = currentPitch + (90f - currentPitch) * 0.2f;
+            MinecraftClient.getInstance().player.setPitch(lerpedPitch);
             return;
         }
         boolean sleeping = MinecraftClient.getInstance().player.isSleeping();

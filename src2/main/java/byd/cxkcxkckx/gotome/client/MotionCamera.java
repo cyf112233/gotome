@@ -5,7 +5,7 @@ import net.minecraft.client.option.Perspective;
 import net.minecraft.util.math.Vec3d;
 
 public class MotionCamera {
-    private Vec3d cameraPos;
+    public Vec3d cameraPos;
     private Float lastYaw = null;
     private Float lastPitch = null;
     private Float inertiaYawSpeed = 0f;
