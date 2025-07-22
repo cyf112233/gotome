@@ -13,6 +13,7 @@ public class GotomeClient {
     public static KeyBinding motionCameraKey;
     public static KeyBinding freeLookKey;
     public static KeyBinding openConfigKey;
+    public static KeyBinding viewLockKey;
     public static MotionCamera motionCamera = new MotionCamera();
     public static FreeLook freeLook = new FreeLook();
 
@@ -34,11 +35,20 @@ public class GotomeClient {
                 org.lwjgl.glfw.GLFW.GLFW_KEY_F7,
                 "category.gotome"
         ));
+        viewLockKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.gotome.view_lock",
+            ConfigManager.config.viewLockKey,
+            "category.gotome"
+        ));
         // 监听按键
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (motionCameraKey.wasPressed()) {
+                boolean wasEnabled = ConfigManager.config.motionCameraEnabled;
                 ConfigManager.config.motionCameraEnabled = !ConfigManager.config.motionCameraEnabled;
                 ConfigManager.save();
+                if (!wasEnabled && ConfigManager.config.motionCameraEnabled && client.player != null) {
+                    client.player.setYaw(client.player.getYaw() + 360f);
+                }
             }
             while (freeLookKey.wasPressed()) {
                 ConfigManager.config.freeLookEnabled = !ConfigManager.config.freeLookEnabled;
@@ -46,6 +56,10 @@ public class GotomeClient {
             }
             while (openConfigKey.wasPressed()) {
                 net.minecraft.client.MinecraftClient.getInstance().setScreen(new ConfigScreen(null));
+            }
+            while (viewLockKey.wasPressed()) {
+                ConfigManager.config.viewLockEnabled = !ConfigManager.config.viewLockEnabled;
+                ConfigManager.save();
             }
             freeLook.enabled = ConfigManager.config.freeLookEnabled;
             freeLook.keyCode = ConfigManager.config.freeLookKey;

@@ -29,6 +29,7 @@ public class MotionCamera {
 
     public void update(Vec3d playerPos, float tickDelta) {
         if (MinecraftClient.getInstance().player == null) return;
+        if (byd.cxkcxkckx.gotome.client.ConfigManager.config.viewLockEnabled) return;
         if (cameraPos == null) {
             cameraPos = playerPos;
         }

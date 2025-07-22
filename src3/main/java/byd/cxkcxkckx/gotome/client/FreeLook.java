@@ -17,9 +17,11 @@ public class FreeLook {
     public float cameraPitch = 0.0f;
     public float turnSpeed = 2.0f; // degrees per tick, can be adjusted
     private Double lastY = null;
+    private Float targetPitch = null;
 
     public void onTick() {
         if (!enabled) return;
+        if (byd.cxkcxkckx.gotome.client.ConfigManager.config.viewLockEnabled) return;
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
 
@@ -54,8 +56,20 @@ public class FreeLook {
         if (lastY == null) lastY = currentY;
         double deltaY = currentY - lastY;
         if (Math.abs(deltaY) > 0.2) {
-            client.player.setPitch(client.player.getPitch() - (float)(ConfigManager.config.freeLookVerticalSensitivity * deltaY));
+            // 只在大变化时更新目标pitch
+            targetPitch = client.player.getPitch() - (float)(ConfigManager.config.freeLookVerticalSensitivity * deltaY);
         }
         lastY = currentY;
+        // 每帧平滑靠近目标pitch
+        if (targetPitch != null) {
+            float currentPitch = client.player.getPitch();
+            float alpha = 0.3f; // 越大越快
+            float newPitch = currentPitch + (targetPitch - currentPitch) * alpha;
+            client.player.setPitch(newPitch);
+            if (Math.abs(newPitch - targetPitch) < 0.01f) {
+                client.player.setPitch(targetPitch);
+                targetPitch = null;
+            }
+        }
     }
 } 

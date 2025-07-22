@@ -36,11 +36,22 @@ public class ConfigScreen extends Screen {
         int y1 = yStart + 24; // 留出标题高度
         int y2 = yStart + 24;
         // 运动相机分组内容
-        motionCameraEnableButton = ButtonWidget.builder(Text.literal((ConfigManager.config.motionCameraEnabled ? "[√] " : "[  ] ") + "启用运动相机功能"), btn -> {
+        motionCameraEnableButton = ButtonWidget.builder(Text.literal((ConfigManager.config.motionCameraEnabled ? "§a■ " : "§c■ ") + "启用运动相机功能"), btn -> {
+            boolean wasEnabled = ConfigManager.config.motionCameraEnabled;
             ConfigManager.config.motionCameraEnabled = !ConfigManager.config.motionCameraEnabled;
-            btn.setMessage(Text.literal((ConfigManager.config.motionCameraEnabled ? "[√] " : "[  ] ") + "启用运动相机功能"));
+            btn.setMessage(Text.literal((ConfigManager.config.motionCameraEnabled ? "§a■ " : "§c■ ") + "启用运动相机功能"));
+            if (!wasEnabled && ConfigManager.config.motionCameraEnabled && MinecraftClient.getInstance().player != null) {
+                MinecraftClient.getInstance().player.setYaw(MinecraftClient.getInstance().player.getYaw() + 360f);
+            }
         }).dimensions(col1x, y1, 200, 20).build();
         this.addDrawableChild(motionCameraEnableButton);
+        y1 += 24;
+        // 新增视角锁定按钮
+        ButtonWidget viewLockButton = ButtonWidget.builder(Text.literal((ConfigManager.config.viewLockEnabled ? "§a■ " : "§c■ ") + "视角锁定"), btn -> {
+            ConfigManager.config.viewLockEnabled = !ConfigManager.config.viewLockEnabled;
+            btn.setMessage(Text.literal((ConfigManager.config.viewLockEnabled ? "§a■ " : "§c■ ") + "视角锁定"));
+        }).dimensions(col1x, y1, 200, 20).build();
+        this.addDrawableChild(viewLockButton);
         y1 += 24;
         motionCameraYawInertiaEnableButton = ButtonWidget.builder(Text.literal((ConfigManager.config.motionCameraYawInertiaEnabled ? "[√] " : "[  ] ") + "启用视角惯性"), btn -> {
             ConfigManager.config.motionCameraYawInertiaEnabled = !ConfigManager.config.motionCameraYawInertiaEnabled;

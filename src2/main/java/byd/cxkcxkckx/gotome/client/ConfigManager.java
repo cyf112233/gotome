@@ -58,5 +58,9 @@ public class ConfigManager {
         public boolean motionCameraYawInertiaEnabled = false;
         public double motionCameraYawInertia = 0.15;
         public float freeLookVerticalSensitivity = 1.0f;
+        // 新增：视角锁定开关
+        public boolean viewLockEnabled = false;
+        // 新增：视角锁定快捷键
+        public int viewLockKey = 0x78; // F9
     }
 } 

@@ -2,5 +2,6 @@
   "category.gotome": "运动相机与自由视角",
   "key.gotome.open_config": "打开设置菜单",
   "key.gotome.motion_camera": "切换运动相机",
-  "key.gotome.freelook": "切换自由视角"
+  "key.gotome.freelook": "切换自由视角",
+  "key.gotome.view_lock": "切换视角锁定"
 } 
