@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.option.Perspective;
 import org.lwjgl.glfw.GLFW;
 
 public class GotomeClient {
