@@ -63,7 +63,11 @@ public class MotionCamera {
             double distance = cameraPos.distanceTo(playerPos);
             double maxDist = ConfigManager.config.motionCameraMaxDistance;
             if (distance > maxDist) {
-                cameraPos = playerPos;
+                cameraPos = new Vec3d(
+                    playerPos.x,
+                    playerPos.y + 1.0,
+                    playerPos.z
+                );
             } else {
                 double smoothFactor = ConfigManager.config.motionCameraSmoothness;
                 double dynamicFactor = smoothFactor * (1.0 - Math.exp(-distance / maxDist));

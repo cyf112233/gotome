@@ -13,6 +13,9 @@ public class MotionCamera {
     private boolean lastInputActive = false;
     private static boolean wasEnabledBeforeSleep = false;
     private static boolean lastSleeping = false;
+    private static final double SLEEP_CAM_LERP = 0.2; // 越大越快
+    private static final double SLEEP_CAM_HEIGHT = 2.5;
+    private static final float SLEEP_CAM_PITCH = 90f;
 
     public boolean firstPerson() {
         return MinecraftClient.getInstance().options.getPerspective() == Perspective.FIRST_PERSON;
@@ -32,12 +35,16 @@ public class MotionCamera {
     public void update(Vec3d playerPos, float tickDelta) {
         if (MinecraftClient.getInstance().player == null) return;
         if (MinecraftClient.getInstance().player.isSleeping()) {
-            // 睡觉时相机移动到玩家正上方俯视
-            cameraPos = new Vec3d(
+            Vec3d target = new Vec3d(
                 MinecraftClient.getInstance().player.getX(),
-                MinecraftClient.getInstance().player.getY() + 2.5,
+                MinecraftClient.getInstance().player.getY() + SLEEP_CAM_HEIGHT,
                 MinecraftClient.getInstance().player.getZ()
             );
+            if (cameraPos == null) cameraPos = target;
+            cameraPos = cameraPos.lerp(target, SLEEP_CAM_LERP);
+            float currentPitch = MinecraftClient.getInstance().player.getPitch();
+            float lerpedPitch = currentPitch + (SLEEP_CAM_PITCH - currentPitch) * 0.2f;
+            MinecraftClient.getInstance().player.setPitch(lerpedPitch);
             return;
         }
         boolean sleeping = MinecraftClient.getInstance().player.isSleeping();
@@ -63,7 +70,11 @@ public class MotionCamera {
             double distance = cameraPos.distanceTo(playerPos);
             double maxDist = ConfigManager.config.motionCameraMaxDistance;
             if (distance > maxDist) {
-                cameraPos = playerPos;
+                cameraPos = new Vec3d(
+                    playerPos.x,
+                    playerPos.y + 1.0,
+                    playerPos.z
+                );
             } else {
                 double smoothFactor = ConfigManager.config.motionCameraSmoothness;
                 double dynamicFactor = smoothFactor * (1.0 - Math.exp(-distance / maxDist));

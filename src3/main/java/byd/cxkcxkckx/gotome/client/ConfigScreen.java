@@ -46,9 +46,9 @@ public class ConfigScreen extends Screen {
         }).dimensions(col1x, y1, 200, 20).build();
         this.addDrawableChild(motionCameraEnableButton);
         y1 += 24;
-        motionCameraYawInertiaEnableButton = ButtonWidget.builder(Text.literal((ConfigManager.config.motionCameraYawInertiaEnabled ? "[√] " : "[  ] ") + "启用视角惯性"), btn -> {
+        motionCameraYawInertiaEnableButton = ButtonWidget.builder(Text.literal((ConfigManager.config.motionCameraYawInertiaEnabled ? "§a■ " : "§c■ ") + "启用视角惯性"), btn -> {
             ConfigManager.config.motionCameraYawInertiaEnabled = !ConfigManager.config.motionCameraYawInertiaEnabled;
-            btn.setMessage(Text.literal((ConfigManager.config.motionCameraYawInertiaEnabled ? "[√] " : "[  ] ") + "启用视角惯性"));
+            btn.setMessage(Text.literal((ConfigManager.config.motionCameraYawInertiaEnabled ? "§a■ " : "§c■ ") + "启用视角惯性"));
         }).dimensions(col1x, y1, 200, 20).build();
         this.addDrawableChild(motionCameraYawInertiaEnableButton);
         y1 += 24;
@@ -109,17 +109,17 @@ public class ConfigScreen extends Screen {
         };
         this.addDrawableChild(maxDistanceSlider);
         y1 += 24;
-        disableFirstPersButton = ButtonWidget.builder(Text.literal((ConfigManager.config.motionCameraDisableFirstPers ? "[√] " : "[  ] ") + "第一人称下禁用运动相机"), btn -> {
+        disableFirstPersButton = ButtonWidget.builder(Text.literal((ConfigManager.config.motionCameraDisableFirstPers ? "§a■ " : "§c■ ") + "第一人称下禁用运动相机"), btn -> {
             ConfigManager.config.motionCameraDisableFirstPers = !ConfigManager.config.motionCameraDisableFirstPers;
-            btn.setMessage(Text.literal((ConfigManager.config.motionCameraDisableFirstPers ? "[√] " : "[  ] ") + "第一人称下禁用运动相机"));
+            btn.setMessage(Text.literal((ConfigManager.config.motionCameraDisableFirstPers ? "§a■ " : "§c■ ") + "第一人称下禁用运动相机"));
         }).dimensions(col1x, y1, 200, 20).build();
         this.addDrawableChild(disableFirstPersButton);
         y1 += 24;
         // 自由视角分组内容
         y2 += 24;
-        freeLookEnableButton = ButtonWidget.builder(Text.literal((ConfigManager.config.freeLookEnabled ? "[√] " : "[  ] ") + "启用自由视角功能"), btn -> {
+        freeLookEnableButton = ButtonWidget.builder(Text.literal((ConfigManager.config.freeLookEnabled ? "§a■ " : "§c■ ") + "启用自由视角功能"), btn -> {
             ConfigManager.config.freeLookEnabled = !ConfigManager.config.freeLookEnabled;
-            btn.setMessage(Text.literal((ConfigManager.config.freeLookEnabled ? "[√] " : "[  ] ") + "启用自由视角功能"));
+            btn.setMessage(Text.literal((ConfigManager.config.freeLookEnabled ? "§a■ " : "§c■ ") + "启用自由视角功能"));
         }).dimensions(col2x, y2, 200, 20).build();
         this.addDrawableChild(freeLookEnableButton);
         y2 += 24;
