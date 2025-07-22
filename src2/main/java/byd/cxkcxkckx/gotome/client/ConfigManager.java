@@ -61,6 +61,6 @@ public class ConfigManager {
         // 新增：视角锁定开关
         public boolean viewLockEnabled = false;
         // 新增：视角锁定快捷键
-        public int viewLockKey = 0x78; // F9
+        public int viewLockKey = org.lwjgl.glfw.GLFW.GLFW_KEY_F9; // F9
     }
 } 

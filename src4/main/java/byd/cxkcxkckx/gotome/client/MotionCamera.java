@@ -31,6 +31,15 @@ public class MotionCamera {
 
     public void update(Vec3d playerPos, float tickDelta) {
         if (MinecraftClient.getInstance().player == null) return;
+        if (MinecraftClient.getInstance().player.isSleeping()) {
+            // 睡觉时相机移动到玩家正上方俯视
+            cameraPos = new Vec3d(
+                MinecraftClient.getInstance().player.getX(),
+                MinecraftClient.getInstance().player.getY() + 2.5,
+                MinecraftClient.getInstance().player.getZ()
+            );
+            return;
+        }
         boolean sleeping = MinecraftClient.getInstance().player.isSleeping();
         if (sleeping && !lastSleeping) {
             wasEnabledBeforeSleep = ConfigManager.config.motionCameraEnabled;

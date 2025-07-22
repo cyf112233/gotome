@@ -162,6 +162,13 @@ public class ConfigScreen extends Screen {
         };
         this.addDrawableChild(freeLookVerticalSensitivitySlider);
         y2 += 24;
+        // 新增视角锁定按钮，移到右侧分组
+        ButtonWidget viewLockButton = ButtonWidget.builder(Text.literal((ConfigManager.config.viewLockEnabled ? "§a■ " : "§c■ ") + "视角锁定"), btn -> {
+            ConfigManager.config.viewLockEnabled = !ConfigManager.config.viewLockEnabled;
+            btn.setMessage(Text.literal((ConfigManager.config.viewLockEnabled ? "§a■ " : "§c■ ") + "视角锁定"));
+        }).dimensions(col2x, y2, 200, 20).build();
+        this.addDrawableChild(viewLockButton);
+        y2 += 24;
         // Remove freeLookInvertYButton (Y-axis invert) from the menu
         y2 += 32;
         // 保存和返回按钮放在底部中间

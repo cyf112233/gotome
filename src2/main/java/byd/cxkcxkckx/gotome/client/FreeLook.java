@@ -22,6 +22,8 @@ public class FreeLook {
     private static boolean lastSleeping = false;
 
     public void onTick() {
+        // 新增：只有运动相机开且不是第一人称时才执行自由视角
+        if (!ConfigManager.config.motionCameraEnabled || MinecraftClient.getInstance().options.getPerspective().isFirstPerson()) return;
         if (byd.cxkcxkckx.gotome.client.ConfigManager.config.viewLockEnabled) return;
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
@@ -61,21 +63,9 @@ public class FreeLook {
         if (lastY == null) lastY = currentY;
         double deltaY = currentY - lastY;
         if (Math.abs(deltaY) > 0.2) {
-            // 只在大变化时更新目标pitch
-            targetPitch = client.player.getPitch() - (float)(ConfigManager.config.freeLookVerticalSensitivity * deltaY);
+            client.player.setPitch(client.player.getPitch() - (float)(ConfigManager.config.freeLookVerticalSensitivity * deltaY));
         }
         lastY = currentY;
-        // 每帧平滑靠近目标pitch
-        if (targetPitch != null) {
-            float currentPitch = client.player.getPitch();
-            float alpha = 0.3f; // 越大越快
-            float newPitch = currentPitch + (targetPitch - currentPitch) * alpha;
-            client.player.setPitch(newPitch);
-            if (Math.abs(newPitch - targetPitch) < 0.01f) {
-                client.player.setPitch(targetPitch);
-                targetPitch = null;
-            }
-        }
 
         boolean keyDown = InputUtil.isKeyPressed(client.getWindow().getHandle(), keyCode);
         if (keyDown && !freelookActive) {

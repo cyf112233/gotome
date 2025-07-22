@@ -46,13 +46,6 @@ public class ConfigScreen extends Screen {
         }).dimensions(col1x, y1, 200, 20).build();
         this.addDrawableChild(motionCameraEnableButton);
         y1 += 24;
-        // 新增视角锁定按钮
-        ButtonWidget viewLockButton = ButtonWidget.builder(Text.literal((ConfigManager.config.viewLockEnabled ? "§a■ " : "§c■ ") + "视角锁定"), btn -> {
-            ConfigManager.config.viewLockEnabled = !ConfigManager.config.viewLockEnabled;
-            btn.setMessage(Text.literal((ConfigManager.config.viewLockEnabled ? "§a■ " : "§c■ ") + "视角锁定"));
-        }).dimensions(col1x, y1, 200, 20).build();
-        this.addDrawableChild(viewLockButton);
-        y1 += 24;
         motionCameraYawInertiaEnableButton = ButtonWidget.builder(Text.literal((ConfigManager.config.motionCameraYawInertiaEnabled ? "[√] " : "[  ] ") + "启用视角惯性"), btn -> {
             ConfigManager.config.motionCameraYawInertiaEnabled = !ConfigManager.config.motionCameraYawInertiaEnabled;
             btn.setMessage(Text.literal((ConfigManager.config.motionCameraYawInertiaEnabled ? "[√] " : "[  ] ") + "启用视角惯性"));
@@ -129,6 +122,13 @@ public class ConfigScreen extends Screen {
             btn.setMessage(Text.literal((ConfigManager.config.freeLookEnabled ? "[√] " : "[  ] ") + "启用自由视角功能"));
         }).dimensions(col2x, y2, 200, 20).build();
         this.addDrawableChild(freeLookEnableButton);
+        y2 += 24;
+        // 新增视角锁定按钮，移到右侧分组
+        ButtonWidget viewLockButton = ButtonWidget.builder(Text.literal((ConfigManager.config.viewLockEnabled ? "§a■ " : "§c■ ") + "视角锁定"), btn -> {
+            ConfigManager.config.viewLockEnabled = !ConfigManager.config.viewLockEnabled;
+            btn.setMessage(Text.literal((ConfigManager.config.viewLockEnabled ? "§a■ " : "§c■ ") + "视角锁定"));
+        }).dimensions(col2x, y2, 200, 20).build();
+        this.addDrawableChild(viewLockButton);
         y2 += 24;
         freeLookSensitivitySlider = new SliderWidget(col2x, y2, 200, 20, Text.literal("自由视角水平灵敏度: "), (ConfigManager.config.freeLookSensitivity - 0.1f) / (2.0f - 0.1f)) {
             {
