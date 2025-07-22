@@ -18,12 +18,29 @@ public class FreeLook {
     public float turnSpeed = 2.0f; // degrees per tick, can be adjusted
     private Double lastY = null;
     private Float targetPitch = null;
+    private static boolean wasEnabledBeforeSleep = false;
+    private static boolean lastSleeping = false;
 
     public void onTick() {
-        if (!enabled) return;
         if (byd.cxkcxkckx.gotome.client.ConfigManager.config.viewLockEnabled) return;
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
+        boolean sleeping = client.player.isSleeping();
+        if (sleeping && !lastSleeping) {
+            wasEnabledBeforeSleep = ConfigManager.config.freeLookEnabled;
+            if (ConfigManager.config.freeLookEnabled) {
+                ConfigManager.config.freeLookEnabled = false;
+                ConfigManager.save();
+            }
+        }
+        if (!sleeping && lastSleeping) {
+            if (wasEnabledBeforeSleep) {
+                ConfigManager.config.freeLookEnabled = true;
+                ConfigManager.save();
+            }
+        }
+        lastSleeping = sleeping;
+        if (!ConfigManager.config.freeLookEnabled) return;
 
         // Get player velocity
         Vec3d velocity = client.player.getVelocity();

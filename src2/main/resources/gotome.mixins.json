@@ -4,8 +4,7 @@
   "package": "byd.cxkcxkckx.gotome.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "CameraMixin",
-    "PlayerEntityMixin"
+    "CameraMixin"
   ],
   "client": [
   ],
