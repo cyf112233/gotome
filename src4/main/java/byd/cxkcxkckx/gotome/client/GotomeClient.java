@@ -76,10 +76,7 @@ public class GotomeClient {
                 Window window = client.getWindow();
                 int width = window.getScaledWidth();
                 int height = window.getScaledHeight();
-                // 保存原有混合模式
-                RenderSystem.enableBlend();
                 drawContext.fill(0, 0, width, height, 0xFF000000);
-                RenderSystem.disableBlend();
             }
         });
     }

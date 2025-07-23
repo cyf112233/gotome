@@ -94,9 +94,7 @@ public class GotomeClient {
                 Window window = client.getWindow();
                 int width = window.getScaledWidth();
                 int height = window.getScaledHeight();
-                RenderSystem.enableBlend();
                 drawContext.fill(0, 0, width, height, 0xFF000000);
-                RenderSystem.disableBlend();
             }
         });
     }
