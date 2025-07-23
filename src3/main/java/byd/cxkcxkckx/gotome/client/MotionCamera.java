@@ -31,34 +31,7 @@ public class MotionCamera {
 
     public void update(Vec3d playerPos, float tickDelta) {
         if (MinecraftClient.getInstance().player == null) return;
-        if (MinecraftClient.getInstance().player.isSleeping()) {
-            Vec3d target = new Vec3d(
-                MinecraftClient.getInstance().player.getX(),
-                MinecraftClient.getInstance().player.getY() + 2.5,
-                MinecraftClient.getInstance().player.getZ()
-            );
-            if (cameraPos == null) cameraPos = target;
-            cameraPos = cameraPos.lerp(target, 0.2);
-            float currentPitch = MinecraftClient.getInstance().player.getPitch();
-            float lerpedPitch = currentPitch + (90f - currentPitch) * 0.2f;
-            MinecraftClient.getInstance().player.setPitch(lerpedPitch);
-            return;
-        }
-        boolean sleeping = MinecraftClient.getInstance().player.isSleeping();
-        if (sleeping && !lastSleeping) {
-            wasEnabledBeforeSleep = ConfigManager.config.motionCameraEnabled;
-            if (ConfigManager.config.motionCameraEnabled) {
-                ConfigManager.config.motionCameraEnabled = false;
-                ConfigManager.save();
-            }
-        }
-        if (!sleeping && lastSleeping) {
-            if (wasEnabledBeforeSleep) {
-                ConfigManager.config.motionCameraEnabled = true;
-                ConfigManager.save();
-            }
-        }
-        lastSleeping = sleeping;
+        if (MinecraftClient.getInstance().player.isSleeping()) return;
         if (ConfigManager.config.viewLockEnabled) return;
         if (ConfigManager.config.motionCameraEnabled) {
             if (cameraPos == null) {

@@ -10,34 +10,5 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerEntity.class)
 public class PlayerEntityMixin {
-    @Unique
-    private boolean gotome$freeLookWasEnabled = false;
-    @Unique
-    private boolean gotome$motionCameraWasEnabled = false;
-
-    @Inject(method = "sleep", at = @At("HEAD"))
-    private void onSleep(CallbackInfo ci) {
-        gotome$freeLookWasEnabled = ConfigManager.config.freeLookEnabled;
-        gotome$motionCameraWasEnabled = ConfigManager.config.motionCameraEnabled;
-        if (ConfigManager.config.freeLookEnabled) {
-            ConfigManager.config.freeLookEnabled = false;
-            ConfigManager.save();
-        }
-        if (ConfigManager.config.motionCameraEnabled) {
-            ConfigManager.config.motionCameraEnabled = false;
-            ConfigManager.save();
-        }
-    }
-
-    @Inject(method = "wakeUp", at = @At("HEAD"))
-    private void onWakeUp(CallbackInfo ci) {
-        if (gotome$freeLookWasEnabled) {
-            ConfigManager.config.freeLookEnabled = true;
-            ConfigManager.save();
-        }
-        if (gotome$motionCameraWasEnabled) {
-            ConfigManager.config.motionCameraEnabled = true;
-            ConfigManager.save();
-        }
-    }
+    // 删除所有关于sleep和wakeUp的注入方法
 } 

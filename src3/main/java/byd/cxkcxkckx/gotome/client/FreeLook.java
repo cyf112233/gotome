@@ -27,21 +27,7 @@ public class FreeLook {
         if (byd.cxkcxkckx.gotome.client.ConfigManager.config.viewLockEnabled) return;
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
-        boolean sleeping = client.player.isSleeping();
-        if (sleeping && !lastSleeping) {
-            wasEnabledBeforeSleep = ConfigManager.config.freeLookEnabled;
-            if (ConfigManager.config.freeLookEnabled) {
-                ConfigManager.config.freeLookEnabled = false;
-                ConfigManager.save();
-            }
-        }
-        if (!sleeping && lastSleeping) {
-            if (wasEnabledBeforeSleep) {
-                ConfigManager.config.freeLookEnabled = true;
-                ConfigManager.save();
-            }
-        }
-        lastSleeping = sleeping;
+        // 删除所有关于sleeping和lastSleeping、wasEnabledBeforeSleep的自由视角关闭/恢复逻辑
         if (!ConfigManager.config.freeLookEnabled) return;
 
         // Get player velocity
