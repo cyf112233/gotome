@@ -17,27 +17,27 @@ public class PlayerEntityMixin {
 
     @Inject(method = "sleep", at = @At("HEAD"))
     private void onSleep(CallbackInfo ci) {
-        // gotome$freeLookWasEnabled = ConfigManager.config.freeLookEnabled;
-        // gotome$motionCameraWasEnabled = ConfigManager.config.motionCameraEnabled;
-        // if (ConfigManager.config.freeLookEnabled) {
-        //     ConfigManager.config.freeLookEnabled = false;
-        //     ConfigManager.save();
-        // }
-        // if (ConfigManager.config.motionCameraEnabled) {
-        //     ConfigManager.config.motionCameraEnabled = false;
-        //     ConfigManager.save();
-        // }
+        gotome$freeLookWasEnabled = ConfigManager.config.freeLookEnabled;
+        gotome$motionCameraWasEnabled = ConfigManager.config.motionCameraEnabled;
+        if (ConfigManager.config.freeLookEnabled) {
+            ConfigManager.config.freeLookEnabled = false;
+            ConfigManager.save();
+        }
+        if (ConfigManager.config.motionCameraEnabled) {
+            ConfigManager.config.motionCameraEnabled = false;
+            ConfigManager.save();
+        }
     }
 
     @Inject(method = "wakeUp", at = @At("HEAD"))
     private void onWakeUp(CallbackInfo ci) {
-        // if (gotome$freeLookWasEnabled) {
-        //     ConfigManager.config.freeLookEnabled = true;
-        //     ConfigManager.save();
-        // }
-        // if (gotome$motionCameraWasEnabled) {
-        //     ConfigManager.config.motionCameraEnabled = true;
-        //     ConfigManager.save();
-        // }
+        if (gotome$freeLookWasEnabled) {
+            ConfigManager.config.freeLookEnabled = true;
+            ConfigManager.save();
+        }
+        if (gotome$motionCameraWasEnabled) {
+            ConfigManager.config.motionCameraEnabled = true;
+            ConfigManager.save();
+        }
     }
 } 
