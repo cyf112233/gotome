@@ -9,6 +9,10 @@ import net.minecraft.text.Text;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
 import org.lwjgl.glfw.GLFW;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.util.Window;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 public class GotomeClient {
     public static KeyBinding motionCameraKey;
@@ -84,6 +88,17 @@ public class GotomeClient {
             }
             lastPerspective = currentPerspective;
             lastWorldLoaded = worldLoaded;
+        });
+        HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client.player != null && ConfigManager.config.motionCameraEnabled && client.player.isSleeping()) {
+                Window window = client.getWindow();
+                int width = window.getScaledWidth();
+                int height = window.getScaledHeight();
+                RenderSystem.enableBlend();
+                drawContext.fill(0, 0, width, height, 0xFF000000);
+                RenderSystem.disableBlend();
+            }
         });
     }
 }

@@ -11,8 +11,6 @@ public class MotionCamera {
     private Float inertiaYawSpeed = 0f;
     private Float inertiaPitchSpeed = 0f;
     private boolean lastInputActive = false;
-    private static boolean wasEnabledBeforeSleep = false;
-    private static boolean lastSleeping = false;
     private static final double SLEEP_CAM_LERP = 0.2; // 越大越快
     private static final double SLEEP_CAM_HEIGHT = 2.5;
     private static final float SLEEP_CAM_PITCH = 90f;
@@ -47,21 +45,6 @@ public class MotionCamera {
             MinecraftClient.getInstance().player.setPitch(lerpedPitch);
             return;
         }
-        boolean sleeping = MinecraftClient.getInstance().player.isSleeping();
-        if (sleeping && !lastSleeping) {
-            wasEnabledBeforeSleep = ConfigManager.config.motionCameraEnabled;
-            if (ConfigManager.config.motionCameraEnabled) {
-                ConfigManager.config.motionCameraEnabled = false;
-                ConfigManager.save();
-            }
-        }
-        if (!sleeping && lastSleeping) {
-            if (wasEnabledBeforeSleep) {
-                ConfigManager.config.motionCameraEnabled = true;
-                ConfigManager.save();
-            }
-        }
-        lastSleeping = sleeping;
         if (ConfigManager.config.viewLockEnabled) return;
         if (ConfigManager.config.motionCameraEnabled) {
             if (cameraPos == null) {

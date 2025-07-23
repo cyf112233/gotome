@@ -4,9 +4,6 @@ import byd.cxkcxkckx.gotome.client.ConfigManager;
 import byd.cxkcxkckx.gotome.client.GotomeClient;
 import byd.cxkcxkckx.gotome.client.MotionCamera;
 import byd.cxkcxkckx.gotome.client.FreeLook;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
@@ -57,17 +54,6 @@ public abstract class CameraMixin {
         if (ConfigManager.config.freeLookEnabled && freeLook.freelookActive) {
             args.set(0, freeLook.cameraYaw);
             args.set(1, freeLook.cameraPitch);
-        }
-    }
-
-    // 新增：渲染全屏黑色遮罩（仅运动相机开启且玩家睡觉时）
-    @Inject(method = "render", at = @At("TAIL"))
-    private void onRenderHud(DrawContext context, float tickDelta, CallbackInfo ci) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player != null && ConfigManager.config.motionCameraEnabled && client.player.isSleeping()) {
-            int width = context.getScaledWindowWidth();
-            int height = context.getScaledWindowHeight();
-            context.fill(0, 0, width, height, 0xFF000000); // 画全屏黑色
         }
     }
 }

@@ -11,8 +11,8 @@ public class MotionCamera {
     private Float inertiaYawSpeed = 0f;
     private Float inertiaPitchSpeed = 0f;
     private boolean lastInputActive = false;
-    private static boolean wasEnabledBeforeSleep = false;
-    private static boolean lastSleeping = false;
+    // private static boolean wasEnabledBeforeSleep = false;
+    // private static boolean lastSleeping = false;
 
     public boolean firstPerson() {
         return MinecraftClient.getInstance().options.getPerspective() == Perspective.FIRST_PERSON;
@@ -31,34 +31,32 @@ public class MotionCamera {
 
     public void update(Vec3d playerPos, float tickDelta) {
         if (MinecraftClient.getInstance().player == null) return;
-        if (MinecraftClient.getInstance().player.isSleeping()) {
-            Vec3d target = new Vec3d(
-                MinecraftClient.getInstance().player.getX(),
-                MinecraftClient.getInstance().player.getY() + 2.5,
-                MinecraftClient.getInstance().player.getZ()
-            );
-            if (cameraPos == null) cameraPos = target;
-            cameraPos = cameraPos.lerp(target, 0.2);
-            float currentPitch = MinecraftClient.getInstance().player.getPitch();
-            float lerpedPitch = currentPitch + (90f - currentPitch) * 0.2f;
-            MinecraftClient.getInstance().player.setPitch(lerpedPitch);
-            return;
-        }
-        boolean sleeping = MinecraftClient.getInstance().player.isSleeping();
-        if (sleeping && !lastSleeping) {
-            wasEnabledBeforeSleep = ConfigManager.config.motionCameraEnabled;
-            if (ConfigManager.config.motionCameraEnabled) {
-                ConfigManager.config.motionCameraEnabled = false;
-                ConfigManager.save();
-            }
-        }
-        if (!sleeping && lastSleeping) {
-            if (wasEnabledBeforeSleep) {
-                ConfigManager.config.motionCameraEnabled = true;
-                ConfigManager.save();
-            }
-        }
-        lastSleeping = sleeping;
+        // boolean sleeping = MinecraftClient.getInstance().player.isSleeping();
+        // if (sleeping && !lastSleeping) {
+        //     wasEnabledBeforeSleep = ConfigManager.config.motionCameraEnabled;
+        //     if (ConfigManager.config.motionCameraEnabled) {
+        //         ConfigManager.config.motionCameraEnabled = false;
+        //         ConfigManager.save();
+        //     }
+        //     MinecraftClient.getInstance().player.setPitch(90f);
+        // }
+        // if (!sleeping && lastSleeping) {
+        //     if (wasEnabledBeforeSleep) {
+        //         ConfigManager.config.motionCameraEnabled = true;
+        //         ConfigManager.save();
+        //     }
+        // }
+        // lastSleeping = sleeping;
+        // if (sleeping) {
+        //     Vec3d target = new Vec3d(
+        //         MinecraftClient.getInstance().player.getX(),
+        //         MinecraftClient.getInstance().player.getY() + 2.5,
+        //         MinecraftClient.getInstance().player.getZ()
+        //     );
+        //     if (cameraPos == null) cameraPos = target;
+        //     cameraPos = cameraPos.lerp(target, 0.2);
+        //     return;
+        // }
         if (ConfigManager.config.viewLockEnabled) return;
         if (ConfigManager.config.motionCameraEnabled) {
             if (cameraPos == null) {
