@@ -12,7 +12,6 @@ import org.lwjgl.glfw.GLFW;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.util.Window;
-import com.mojang.blaze3d.vertex.PoseStack;
 
 public class GotomeClient {
     public static KeyBinding motionCameraKey;
