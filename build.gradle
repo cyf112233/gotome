@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.16.1'
+    id 'net.fabricmc.fabric-loom' version '1.16.1'
     id 'maven-publish'
 }
 
@@ -57,9 +57,9 @@ repositories {
 dependencies {
     minecraft "com.mojang:minecraft:${targetMinecraftVersion}"
     mappings "net.fabricmc:yarn:${targetYarnMappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:+"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:+"
-    modImplementation "me.shedaniel.cloth:cloth-config-fabric:${targetClothConfigVersion}"
+    Implementation "net.fabricmc:fabric-loader:+"
+    Implementation "net.fabricmc.fabric-api:fabric-api:+"
+    Implementation "me.shedaniel.cloth:cloth-config-fabric:${targetClothConfigVersion}"
 }
 
 processResources {
