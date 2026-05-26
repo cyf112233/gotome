@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "gotome",
+  "version": "1.0-1.21.8",
+  "name": "gotome",
+  "description": "",
+  "authors": ["cxkcxkckx", "Wormwaker"],
+  "contact": {
+    "repo": "https://github.com/cyf112233/gotome"
+  },
+  "license": "GPL-3.0",
+  "icon": "assets/gotome/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "byd.cxkcxkckx.gotome.Gotome"
+    ]
+  },
+  "mixins": [
+    "gotome.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "fabric": "*",
+    "minecraft": "1.21.8",
+    "fabric-api": "*",
+    "cloth-config": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}
