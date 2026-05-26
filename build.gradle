@@ -57,8 +57,8 @@ repositories {
 dependencies {
     minecraft "com.mojang:minecraft:${targetMinecraftVersion}"
     mappings "net.fabricmc:yarn:${targetYarnMappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${targetLoaderVersion}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${targetFabricVersion}"
+    modImplementation "net.fabricmc:fabric-loader:+"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:+"
     modImplementation "me.shedaniel.cloth:cloth-config-fabric:${targetClothConfigVersion}"
 }
 
