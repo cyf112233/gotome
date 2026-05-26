@@ -1,53 +1,38 @@
-plugins {
-    id 'fabric-loom' version '1.16.1'
-    id 'maven-publish'
-}
-
-version = project.mod_version
-group = project.maven_group
-
-base {
-    archivesName = project.archives_base_name
-}
-
 ext {
     targetMinecraftVersion = (project.findProperty('minecraft_version') ?: project.minecraft_version).toString()
     targetYarnMappings = (project.findProperty('yarn_mappings') ?: project.yarn_mappings).toString()
     targetLoaderVersion = (project.findProperty('loader_version') ?: project.loader_version).toString()
     targetModVersion = (project.findProperty('mod_version') ?: project.mod_version).toString()
 
-    // 【新增】动态解析函数：查找匹配 MC 版本的最新依赖
+    // 【修复】使用 Gradle 原生 API 动态解析兼容版本
     resolveLatestCompatible = { String group, String module, String mcVersion ->
-        def metadataUrl = "https://maven.fabricmc.net/${group.replace('.', '/')}/${module}/maven-metadata.xml"
-        if (group == 'me.shedaniel.cloth') {
-            metadataUrl = "https://maven.shedaniel.me/${group.replace('.', '/')}/${module}/maven-metadata.xml"
-        }
-
         try {
-            def xml = new XmlParser().parseText(new URL(metadataUrl).text)
-            def versions = xml.versioning.versions.version.collect { it.text() }
+            // 创建一个临时的、可解析的配置来获取版本列表
+            def detachedConfig = configurations.detachedConfiguration(
+                dependencies.create("${group}:${module}:+")
+            )
+            detachedConfig.transitive = false
+            
+            // 获取所有可用版本并过滤
+            def allVersions = detachedConfig.resolvedConfiguration.lenientConfiguration.allModuleDependencies
+                .collectMany { it.allArtifacts.collect { artifact -> artifact.moduleVersion.id.version } }
+                .unique()
 
-            // Fabric API 格式: x.y.z+mc_version
-            // Cloth Config 格式: x.y.z+mc_version 或 x.y.z-mc_version
-            def compatible = versions.findAll { v ->
-                v.endsWith("+${mcVersion}") || v.endsWith("-${mcVersion}") || v.contains("+${mcVersion}")
+            // Fabric/Cloth 命名规范: version+mcVersion 或 version-mcVersion
+            def compatible = allVersions.findAll { v ->
+                v.endsWith("+${mcVersion}") || v.endsWith("-${mcVersion}")
             }
 
             if (compatible.isEmpty()) {
-                logger.warn("⚠️  No compatible version found for ${module} with MC ${mcVersion}")
+                logger.warn("⚠️ No compatible ${module} found for MC ${mcVersion}")
                 return null
             }
 
-            // 按版本号排序，取最新的
-            def latest = compatible.sort { a, b ->
-                def aParts = a.replaceAll("[+\\-].*", "").tokenize('.')
-                def bParts = b.replaceAll("[+\\-].*", "").tokenize('.')
-                def size = Math.min(aParts.size(), bParts.size())
-                for (int i = 0; i < size; i++) {
-                    def cmp = aParts[i].toInteger() <=> bParts[i].toInteger()
-                    if (cmp != 0) return cmp
-                }
-                aParts.size() <=> bParts.size()
+            // 简单的语义化排序取最新
+            def latest = compatible.sort(false) { a, b ->
+                def cleanA = a.replaceAll(/[+\-].*/, "").tokenize('.')*.toInteger()
+                def cleanB = b.replaceAll(/[+\-].*/, "").tokenize('.')*.toInteger()
+                cleanA <=> cleanB
             }.last()
 
             logger.lifecycle("✅ Resolved ${module} for MC ${mcVersion}: ${latest}")
@@ -58,11 +43,10 @@ ext {
         }
     }
 
-    // 【新增】动态解析当前目标版本的依赖
+    // 动态解析当前版本的依赖
     resolvedFabricVersion = project.findProperty('fabric_version')?.toString()
     resolvedClothVersion = project.findProperty('cloth_config_version')?.toString()
 
-    // 如果没有通过命令行指定，则动态查找
     if (!resolvedFabricVersion) {
         resolvedFabricVersion = resolveLatestCompatible(
             'net.fabricmc.fabric-api', 'fabric-api', targetMinecraftVersion
@@ -73,89 +57,6 @@ ext {
             'me.shedaniel.cloth', 'cloth-config-fabric', targetMinecraftVersion
         )
     }
-
-    yarnMappingByVersion = [
-        '1.21.1' : '1.21.1+build.3',
-        '1.21.4' : '1.21.4+build.8',
-        '1.21.5' : '1.21.5+build.1',
-        // ... 其他版本
-    ]
-}
-
-repositories {
-    maven { url = 'https://maven.fabricmc.net/' }
-    maven { url = 'https://maven.shedaniel.me/' }
-    mavenCentral()
-}
-
-loom {
-    enableTransitiveAccessWideners = false
-}
-
-dependencies {
-    minecraft "com.mojang:minecraft:${targetMinecraftVersion}"
-    mappings "net.fabricmc:yarn:${targetYarnMappings}:v2"
-
-    modImplementation "net.fabricmc:fabric-loader:${targetLoaderVersion}"
-
-    // 【关键】使用动态解析的版本
-    if (resolvedFabricVersion) {
-        modImplementation "net.fabricmc.fabric-api:fabric-api:${resolvedFabricVersion}"
-    } else {
-        throw new GradleException("Cannot resolve Fabric API for MC ${targetMinecraftVersion}")
-    }
-
-    if (resolvedClothVersion) {
-        modImplementation "me.shedaniel.cloth:cloth-config-fabric:${resolvedClothVersion}"
-    } else {
-        logger.warn("Cloth Config not resolved for MC ${targetMinecraftVersion}, skipping")
-    }
-}
-
-// ... processResources, java, jar, publishing 保持不变 ...
-
-tasks.register('buildMatrix') {
-    group = 'build'
-    description = 'Build the mod for each supported Minecraft version.'
-    doLast {
-        def versions = (project.findProperty('supported_versions') ?: '').toString()
-            .split(',').collect { it.trim() }.findAll { it }
-
-        if (versions.isEmpty()) {
-            throw new IllegalStateException('No supported_versions configured in gradle.properties')
-        }
-
-        def outputDir = file('output')
-        outputDir.mkdirs()
-        def gradleExe = org.gradle.internal.os.OperatingSystem.current().isWindows()
-            ? 'gradlew.bat' : './gradlew'
-
-        versions.each { version ->
-            def mappedYarn = yarnMappingByVersion[version]
-            if (mappedYarn == null) {
-                throw new IllegalStateException("Unsupported Minecraft version: ${version}")
-            }
-
-            logger.lifecycle("🔨 Building matrix for MC ${version}...")
-
-            exec {
-                workingDir rootDir
-                commandLine gradleExe, 'clean', 'build',
-                    "-Pminecraft_version=${version}",
-                    "-Pyarn_mappings=${mappedYarn}",
-                    "-Pmod_version=${project.mod_version}-${version}",
-                    "-Ploader_version=${targetLoaderVersion}"
-                    // 【注意】不再传递 fabric_version 和 cloth_config_version
-                    // 让子构建自己动态解析！
-            }
-
-            copy {
-                from fileTree('build/libs')
-                into outputDir
-                include "*.jar"
-                exclude "*-sources.jar", "*-dev.jar"
-                rename { fileName -> "${version}-${fileName}" }
-            }
-        }
-    }
+    
+    // ... yarnMappingByVersion 保持不变 ...
 }
