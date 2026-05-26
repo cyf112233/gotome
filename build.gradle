@@ -56,10 +56,10 @@ repositories {
 
 loom {
     enableTransitiveAccessWideners = false
+    mappings "net.fabricmc:yarn:${targetYarnMappings}:v2"
 }
 
 dependencies {
-    mappings "net.fabricmc:yarn:${targetYarnMappings}:v2"
     minecraft "com.mojang:minecraft:${targetMinecraftVersion}"
     modImplementation "net.fabricmc:fabric-loader:+"
     modImplementation "net.fabricmc.fabric-api:fabric-api:+"
