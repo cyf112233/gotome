@@ -190,14 +190,14 @@ tasks.register('buildMatrix') {
         def outputDir = file('output')
         outputDir.mkdirs()
         def gradleExe = System.getProperty('os.name').toLowerCase().contains('windows') ? 'gradlew.bat' : './gradlew'
+        
         versions.each { version ->
             def mappedYarn = yarnMappingByVersion[version]
             if (mappedYarn == null) {
                 throw new IllegalStateException("Unsupported Minecraft version: ${version}")
             }
-            // 关键修复：使用 as String[] 强制转换
             def command = [
-                gradleExe, 'clean', 'build',
+                gradleExe, 'clean', 'build', '--stacktrace',
                 "-Pminecraft_version=${version}",
                 "-Pyarn_mappings=${mappedYarn}",
                 "-Pmod_version=${project.mod_version}-${version}",
@@ -206,14 +206,30 @@ tasks.register('buildMatrix') {
                 "-Pcloth_config_version=${targetClothConfigVersion}"
             ] as String[]
             
+            println "========================================"
+            println "Executing for Minecraft $version"
+            println "Command: ${command.join(' ')}"
+            println "========================================"
+            
+            // 使用 ProcessBuilder 并手动捕获输出
             def process = new ProcessBuilder(command)
                 .directory(rootDir)
-                .inheritIO()
+                .redirectErrorStream(true) // 合并 stderr 到 stdout
                 .start()
+            
+            // 读取子进程的输出并实时打印
+            def reader = new BufferedReader(new InputStreamReader(process.inputStream))
+            def line
+            while ((line = reader.readLine()) != null) {
+                println line
+            }
+            
             int exitCode = process.waitFor()
             if (exitCode != 0) {
                 throw new GradleException("Gradle build failed for version $version (exit code $exitCode)")
             }
+            
+            // 复制产物
             copy {
                 from fileTree('build/libs')
                 into outputDir
