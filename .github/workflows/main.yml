@@ -45,7 +45,7 @@ jobs:
       run: chmod +x gradlew
       
     - name: Build with Gradle
-      run: ./gradlew buildMatrix
+      run: ./gradlew buildMatrix --stacktrace
 
     # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
     # the publishing section of your build.gradle
