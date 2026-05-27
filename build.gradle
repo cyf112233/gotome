@@ -188,7 +188,8 @@ tasks.register('buildMatrix') {
             if (mappedYarn == null) {
                 throw new IllegalStateException("Unsupported Minecraft version: ${version}")
             }
-            exec {
+            // 使用 project.exec 而不是 exec
+            project.exec {
                 workingDir rootDir
                 commandLine gradleExe, 'clean', 'build',
                         "-Pminecraft_version=${version}",
@@ -198,7 +199,8 @@ tasks.register('buildMatrix') {
                         "-Pfabric_version=${targetFabricVersion}",
                         "-Pcloth_config_version=${targetClothConfigVersion}"
             }
-            copy {
+            // 使用 project.copy 而不是 copy
+            project.copy {
                 from fileTree('build/libs')
                 into outputDir
                 rename { fileName -> "${version}-${fileName}" }
