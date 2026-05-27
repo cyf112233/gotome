@@ -48,6 +48,28 @@ ext {
     ]
 }
 
+String resolveFabricApiVersion(String mcVersion) {
+    def metadataUrl = "https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml"
+    try {
+        def metadata = new XmlSlurper().parse(metadataUrl)
+        def allVersions = metadata.versioning.versions.version*.text()
+        def pattern = ~/0\.[0-9]+\.[0-9]+\+${mcVersion}/
+        def matched = allVersions.findAll { it ==~ pattern }
+        if (matched.isEmpty()) {
+            throw new GradleException("No fabric-api version found for Minecraft $mcVersion")
+        }
+        def sorted = matched.sort { a, b ->
+            def (minorA, patchA) = (a =~ /0\.(\d+)\.(\d+)\+.*/)[0].collect { it as int }
+            def (minorB, patchB) = (b =~ /0\.(\d+)\.(\d+)\+.*/)[0].collect { it as int }
+            if (minorA != minorB) return minorA <=> minorB
+            return patchA <=> patchB
+        }
+        return sorted.last()
+    } catch (Exception e) {
+        throw new GradleException("Failed to resolve fabric-api version for $mcVersion", e)
+    }
+}
+
 repositories {
     maven { url = 'https://maven.fabricmc.net/' }
     maven { url = 'https://maven.shedaniel.me/' }
@@ -62,7 +84,7 @@ dependencies {
     minecraft "com.mojang:minecraft:${targetMinecraftVersion}"
     mappings "net.fabricmc:yarn:${targetYarnMappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:0.16.10"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:0.+.++${targetMinecraftVersion}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${resolveFabricApiVersion(targetMinecraftVersion)}"
     modImplementation "me.shedaniel.cloth:cloth-config-fabric:${targetClothConfigVersion}"
 }
 
