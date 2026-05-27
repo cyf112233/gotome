@@ -208,5 +208,3 @@ tasks.register('buildMatrix') {
         }
     }
 }
-    }
-}
