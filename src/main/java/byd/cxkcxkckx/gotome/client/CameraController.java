@@ -1,9 +1,9 @@
 package byd.cxkcxkckx.gotome.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
 public final class CameraController {
@@ -85,10 +85,10 @@ public final class CameraController {
             return;
         }
 
-        double smoothFactor = Mth.clamp(ConfigManager.config.motionCameraSmoothness, 0.05, 0.98);
+        double smoothFactor = Math.max(0.05, Math.min(ConfigManager.config.motionCameraSmoothness, 0.98));
         double dynamicFactor = smoothFactor * (1.0 - Math.exp(-distance / maxDist));
-        double horizontalFactor = Mth.clamp(dynamicFactor, 0.02, 0.9);
-        double verticalFactor = Mth.clamp(horizontalFactor + 0.12, 0.05, 0.95);
+        double horizontalFactor = Math.max(0.02, Math.min(dynamicFactor, 0.9));
+        double verticalFactor = Math.max(0.05, Math.min(horizontalFactor + 0.12, 0.95));
 
         double targetY = cameraAnchorPos.y + client.player.getEyeHeight(client.player.getPose());
         double dx = cameraAnchorPos.x - cameraPos.x;
@@ -108,8 +108,7 @@ public final class CameraController {
             return;
         }
 
-        long window = client.getWindow().getWindow();
-        boolean keyDown = com.mojang.blaze3d.platform.InputConstants.isKeyDown(window, ConfigManager.config.freeLookKey);
+        boolean keyDown = InputConstants.isKeyDown(client.getWindow().getWindow(), ConfigManager.config.freeLookKey);
         if (keyDown && !freeLookActive) {
             freeLookActive = true;
             freeLookYaw = player.getYRot();
@@ -140,7 +139,7 @@ public final class CameraController {
         verticalFollowVelocity = verticalFollowVelocity * 0.78 + targetOffset * 0.22;
         verticalFollowOffset = verticalFollowOffset * 0.82 + verticalFollowVelocity * 0.18;
 
-        float nextPitch = Mth.clamp(player.getXRot() + (float) verticalFollowOffset, -90.0f, 90.0f);
+        float nextPitch = (float) Math.max(-90.0f, Math.min(player.getXRot() + (float) verticalFollowOffset, 90.0f));
         player.setXRot(nextPitch);
         lastFollowY = currentY;
     }
@@ -162,18 +161,17 @@ public final class CameraController {
             return;
         }
 
-        float deltaYaw = Mth.wrapDegrees(currentYaw - lastPlayerYaw);
+        float deltaYaw = currentYaw - lastPlayerYaw;
         float deltaPitch = currentPitch - lastPlayerPitch;
-        float response = Mth.clamp((float) ConfigManager.config.motionCameraYawInertia, 0.02f, 0.35f);
+        float response = (float) Math.max(0.02f, Math.min(ConfigManager.config.motionCameraYawInertia, 0.35f));
 
-        // Use a continuous filter instead of a hard stop threshold so mouse motion feels natural.
         inertiaYawVelocity += (deltaYaw - inertiaYawVelocity) * response;
         inertiaPitchVelocity += (deltaPitch - inertiaPitchVelocity) * response;
         inertiaYawVelocity *= 1.0f - response * 0.12f;
         inertiaPitchVelocity *= 1.0f - response * 0.12f;
 
-        float nextYaw = Mth.wrapDegrees(currentYaw + inertiaYawVelocity);
-        float nextPitch = Mth.clamp(currentPitch + inertiaPitchVelocity, -90.0f, 90.0f);
+        float nextYaw = currentYaw + inertiaYawVelocity;
+        float nextPitch = (float) Math.max(-90.0f, Math.min(currentPitch + inertiaPitchVelocity, 90.0f));
         player.setYRot(nextYaw);
         player.setXRot(nextPitch);
 
@@ -182,7 +180,7 @@ public final class CameraController {
     }
 
     private boolean firstPerson(Minecraft client) {
-        return client.options.getCameraType() == Options.CameraType.FIRST_PERSON;
+        return client.options.getCameraType().isFirstPerson();
     }
 
     private void resetTransientState() {

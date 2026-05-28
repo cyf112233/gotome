@@ -1,7 +1,8 @@
 package byd.cxkcxkckx.gotome.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Options;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.phys.Vec3;
 
 public class MotionCamera {
@@ -15,23 +16,25 @@ public class MotionCamera {
     private static final float SLEEP_CAM_PITCH = 90f;
 
     public boolean firstPerson() {
-        return Minecraft.getInstance().options.getCameraType() == Options.CameraType.FIRST_PERSON;
+        return Minecraft.getInstance().options.getCameraType().isFirstPerson();
     }
 
     public Vec3 getCameraPos() {
         if (firstPerson()) {
+            LocalPlayer player = Minecraft.getInstance().player;
             return new Vec3(
-                    Minecraft.getInstance().player.getX(),
-                    Minecraft.getInstance().player.getY() + Minecraft.getInstance().player.getEyeHeight(Minecraft.getInstance().player.getPose()),
-                    Minecraft.getInstance().player.getZ()
+                    player.getX(),
+                    player.getY() + player.getEyeHeight(player.getPose()),
+                    player.getZ()
             );
         }
         return cameraPos;
     }
 
     public void update(Vec3 playerPos, float partialTick) {
-        if (Minecraft.getInstance().player == null) return;
-        if (Minecraft.getInstance().player.isSleeping()) return;
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null) return;
+        if (player.isSleeping()) return;
         if (ConfigManager.config.viewLockEnabled) return;
         if (ConfigManager.config.motionCameraEnabled) {
             if (cameraPos == null) {
@@ -45,7 +48,7 @@ public class MotionCamera {
                 double smoothFactor = ConfigManager.config.motionCameraSmoothness;
                 double dynamicFactor = smoothFactor * (1.0 - Math.exp(-distance / maxDist));
                 double dx = playerPos.x - cameraPos.x;
-                double dy = playerPos.y + Minecraft.getInstance().player.getEyeHeight(Minecraft.getInstance().player.getPose()) - cameraPos.y;
+                double dy = playerPos.y + player.getEyeHeight(player.getPose()) - cameraPos.y;
                 double dz = playerPos.z - cameraPos.z;
                 cameraPos = new Vec3(
                         cameraPos.x + dx * dynamicFactor,
@@ -54,8 +57,8 @@ public class MotionCamera {
                 );
             }
             if (ConfigManager.config.motionCameraYawInertiaEnabled) {
-                float currentYaw = Minecraft.getInstance().player.getYRot();
-                float currentPitch = Minecraft.getInstance().player.getXRot();
+                float currentYaw = player.getYRot();
+                float currentPitch = player.getXRot();
                 if (lastYaw == null) lastYaw = currentYaw;
                 if (lastPitch == null) lastPitch = currentPitch;
                 float deltaYaw = currentYaw - lastYaw;
@@ -69,13 +72,13 @@ public class MotionCamera {
                 } else {
                     inertiaYawSpeed *= (1f - inertia);
                     inertiaPitchSpeed *= (1f - inertia);
-                    Minecraft.getInstance().player.setYRot(currentYaw + inertiaYawSpeed);
-                    Minecraft.getInstance().player.setXRot(currentPitch + inertiaPitchSpeed);
+                    player.setYRot(currentYaw + inertiaYawSpeed);
+                    player.setXRot(currentPitch + inertiaPitchSpeed);
                 }
                 if (Math.abs(inertiaYawSpeed) < 0.001f) inertiaYawSpeed = 0f;
                 if (Math.abs(inertiaPitchSpeed) < 0.001f) inertiaPitchSpeed = 0f;
-                lastYaw = Minecraft.getInstance().player.getYRot();
-                lastPitch = Minecraft.getInstance().player.getXRot();
+                lastYaw = player.getYRot();
+                lastPitch = player.getXRot();
             } else {
                 lastYaw = null;
                 lastPitch = null;
