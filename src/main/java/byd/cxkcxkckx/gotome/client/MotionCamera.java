@@ -1,11 +1,11 @@
 package byd.cxkcxkckx.gotome.client;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.world.phys.Vec3;
 
 public class MotionCamera {
-    public Vec3d cameraPos;
+    public Vec3 cameraPos;
     private Float lastYaw = null;
     private Float lastPitch = null;
     private Float inertiaYawSpeed = 0f;
@@ -15,23 +15,23 @@ public class MotionCamera {
     private static final float SLEEP_CAM_PITCH = 90f;
 
     public boolean firstPerson() {
-        return MinecraftClient.getInstance().options.getPerspective() == Perspective.FIRST_PERSON;
+        return Minecraft.getInstance().options.getCameraType() == Options.CameraType.FIRST_PERSON;
     }
 
-    public Vec3d getCameraPos() {
+    public Vec3 getCameraPos() {
         if (firstPerson()) {
-            return new Vec3d(
-                    MinecraftClient.getInstance().player.getX(),
-                    MinecraftClient.getInstance().player.getY() + MinecraftClient.getInstance().player.getEyeHeight(MinecraftClient.getInstance().player.getPose()),
-                    MinecraftClient.getInstance().player.getZ()
+            return new Vec3(
+                    Minecraft.getInstance().player.getX(),
+                    Minecraft.getInstance().player.getY() + Minecraft.getInstance().player.getEyeHeight(Minecraft.getInstance().player.getPose()),
+                    Minecraft.getInstance().player.getZ()
             );
         }
         return cameraPos;
     }
 
-    public void update(Vec3d playerPos, float tickDelta) {
-        if (MinecraftClient.getInstance().player == null) return;
-        if (MinecraftClient.getInstance().player.isSleeping()) return;
+    public void update(Vec3 playerPos, float partialTick) {
+        if (Minecraft.getInstance().player == null) return;
+        if (Minecraft.getInstance().player.isSleeping()) return;
         if (ConfigManager.config.viewLockEnabled) return;
         if (ConfigManager.config.motionCameraEnabled) {
             if (cameraPos == null) {
@@ -40,22 +40,22 @@ public class MotionCamera {
             double distance = cameraPos.distanceTo(playerPos);
             double maxDist = ConfigManager.config.motionCameraMaxDistance;
             if (distance > maxDist) {
-                cameraPos = new Vec3d(playerPos.x, playerPos.y + 1.0, playerPos.z);
+                cameraPos = new Vec3(playerPos.x, playerPos.y + 1.0, playerPos.z);
             } else {
                 double smoothFactor = ConfigManager.config.motionCameraSmoothness;
                 double dynamicFactor = smoothFactor * (1.0 - Math.exp(-distance / maxDist));
                 double dx = playerPos.x - cameraPos.x;
-                double dy = playerPos.y + MinecraftClient.getInstance().player.getEyeHeight(MinecraftClient.getInstance().player.getPose()) - cameraPos.y;
+                double dy = playerPos.y + Minecraft.getInstance().player.getEyeHeight(Minecraft.getInstance().player.getPose()) - cameraPos.y;
                 double dz = playerPos.z - cameraPos.z;
-                cameraPos = new Vec3d(
+                cameraPos = new Vec3(
                         cameraPos.x + dx * dynamicFactor,
                         cameraPos.y + dy * dynamicFactor,
                         cameraPos.z + dz * dynamicFactor
                 );
             }
             if (ConfigManager.config.motionCameraYawInertiaEnabled) {
-                float currentYaw = MinecraftClient.getInstance().player.getYaw();
-                float currentPitch = MinecraftClient.getInstance().player.getPitch();
+                float currentYaw = Minecraft.getInstance().player.getYRot();
+                float currentPitch = Minecraft.getInstance().player.getXRot();
                 if (lastYaw == null) lastYaw = currentYaw;
                 if (lastPitch == null) lastPitch = currentPitch;
                 float deltaYaw = currentYaw - lastYaw;
@@ -69,13 +69,13 @@ public class MotionCamera {
                 } else {
                     inertiaYawSpeed *= (1f - inertia);
                     inertiaPitchSpeed *= (1f - inertia);
-                    MinecraftClient.getInstance().player.setYaw(currentYaw + inertiaYawSpeed);
-                    MinecraftClient.getInstance().player.setPitch(currentPitch + inertiaPitchSpeed);
+                    Minecraft.getInstance().player.setYRot(currentYaw + inertiaYawSpeed);
+                    Minecraft.getInstance().player.setXRot(currentPitch + inertiaPitchSpeed);
                 }
                 if (Math.abs(inertiaYawSpeed) < 0.001f) inertiaYawSpeed = 0f;
                 if (Math.abs(inertiaPitchSpeed) < 0.001f) inertiaPitchSpeed = 0f;
-                lastYaw = MinecraftClient.getInstance().player.getYaw();
-                lastPitch = MinecraftClient.getInstance().player.getPitch();
+                lastYaw = Minecraft.getInstance().player.getYRot();
+                lastPitch = Minecraft.getInstance().player.getXRot();
             } else {
                 lastYaw = null;
                 lastPitch = null;

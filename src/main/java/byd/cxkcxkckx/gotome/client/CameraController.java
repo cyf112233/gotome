@@ -1,15 +1,13 @@
 package byd.cxkcxkckx.gotome.client;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.Window;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 public final class CameraController {
-    private Vec3d cameraPos;
+    private Vec3 cameraPos;
     private boolean freeLookActive = false;
     private float freeLookYaw;
     private float freeLookPitch;
@@ -21,8 +19,8 @@ public final class CameraController {
     private double verticalFollowOffset;
     private double verticalFollowVelocity;
 
-    public void tick(MinecraftClient client) {
-        PlayerEntity player = client.player;
+    public void tick(Minecraft client) {
+        LocalPlayer player = client.player;
         if (player == null) {
             resetTransientState();
             return;
@@ -38,13 +36,13 @@ public final class CameraController {
         updateMouseInertia(player);
     }
 
-    public void applyCameraPosition(MinecraftClient client, Vec3d cameraAnchorPos, float tickDelta, Object[] argsHolder) {
+    public void applyCameraPosition(Minecraft client, Vec3 cameraAnchorPos, float partialTick, Object[] argsHolder) {
         if (client.player == null) return;
         if (!ConfigManager.config.motionCameraEnabled) return;
         if (ConfigManager.config.motionCameraDisableFirstPers && firstPerson(client)) return;
 
-        updateCameraPosition(client, cameraAnchorPos, tickDelta);
-        Vec3d pos = getCameraPos(client);
+        updateCameraPosition(client, cameraAnchorPos, partialTick);
+        Vec3 pos = getCameraPos(client);
         argsHolder[0] = pos.x;
         argsHolder[1] = pos.y;
         argsHolder[2] = pos.z;
@@ -61,12 +59,12 @@ public final class CameraController {
         return freeLookActive;
     }
 
-    public Vec3d getCameraPos(MinecraftClient client) {
+    public Vec3 getCameraPos(Minecraft client) {
         if (client.player == null) {
             return cameraPos;
         }
         if (firstPerson(client)) {
-            return new Vec3d(
+            return new Vec3(
                     client.player.getX(),
                     client.player.getY() + client.player.getEyeHeight(client.player.getPose()),
                     client.player.getZ()
@@ -75,53 +73,53 @@ public final class CameraController {
         return cameraPos;
     }
 
-    private void updateCameraPosition(MinecraftClient client, Vec3d cameraAnchorPos, float tickDelta) {
+    private void updateCameraPosition(Minecraft client, Vec3 cameraAnchorPos, float partialTick) {
         if (cameraPos == null) {
-            cameraPos = new Vec3d(cameraAnchorPos.x, cameraAnchorPos.y + 1.0, cameraAnchorPos.z);
+            cameraPos = new Vec3(cameraAnchorPos.x, cameraAnchorPos.y + 1.0, cameraAnchorPos.z);
         }
 
         double distance = cameraPos.distanceTo(cameraAnchorPos);
         double maxDist = Math.max(1.0, ConfigManager.config.motionCameraMaxDistance);
         if (distance > maxDist) {
-            cameraPos = new Vec3d(cameraAnchorPos.x, cameraAnchorPos.y + 1.0, cameraAnchorPos.z);
+            cameraPos = new Vec3(cameraAnchorPos.x, cameraAnchorPos.y + 1.0, cameraAnchorPos.z);
             return;
         }
 
-        double smoothFactor = MathHelper.clamp(ConfigManager.config.motionCameraSmoothness, 0.05, 0.98);
+        double smoothFactor = Mth.clamp(ConfigManager.config.motionCameraSmoothness, 0.05, 0.98);
         double dynamicFactor = smoothFactor * (1.0 - Math.exp(-distance / maxDist));
-        double horizontalFactor = MathHelper.clamp(dynamicFactor, 0.02, 0.9);
-        double verticalFactor = MathHelper.clamp(horizontalFactor + 0.12, 0.05, 0.95);
+        double horizontalFactor = Mth.clamp(dynamicFactor, 0.02, 0.9);
+        double verticalFactor = Mth.clamp(horizontalFactor + 0.12, 0.05, 0.95);
 
         double targetY = cameraAnchorPos.y + client.player.getEyeHeight(client.player.getPose());
         double dx = cameraAnchorPos.x - cameraPos.x;
         double dy = targetY - cameraPos.y;
         double dz = cameraAnchorPos.z - cameraPos.z;
 
-        cameraPos = new Vec3d(
+        cameraPos = new Vec3(
                 cameraPos.x + dx * horizontalFactor,
                 cameraPos.y + dy * verticalFactor,
                 cameraPos.z + dz * horizontalFactor
         );
     }
 
-    private void updateFreeLookState(MinecraftClient client, PlayerEntity player) {
+    private void updateFreeLookState(Minecraft client, LocalPlayer player) {
         if (!ConfigManager.config.freeLookEnabled || !ConfigManager.config.motionCameraEnabled || firstPerson(client)) {
             freeLookActive = false;
             return;
         }
 
-        Window window = client.getWindow();
-        boolean keyDown = InputUtil.isKeyPressed(window, ConfigManager.config.freeLookKey);
+        long window = client.getWindow().getWindow();
+        boolean keyDown = com.mojang.blaze3d.platform.InputConstants.isKeyDown(window, ConfigManager.config.freeLookKey);
         if (keyDown && !freeLookActive) {
             freeLookActive = true;
-            freeLookYaw = player.getYaw();
-            freeLookPitch = player.getPitch();
+            freeLookYaw = player.getYRot();
+            freeLookPitch = player.getXRot();
         } else if (!keyDown && freeLookActive) {
             freeLookActive = false;
         }
     }
 
-    private void updateMovementFollow(MinecraftClient client, PlayerEntity player) {
+    private void updateMovementFollow(Minecraft client, LocalPlayer player) {
         if (!ConfigManager.config.freeLookEnabled || freeLookActive || !ConfigManager.config.motionCameraEnabled || firstPerson(client)) {
             lastFollowY = null;
             verticalFollowOffset = 0.0;
@@ -142,13 +140,13 @@ public final class CameraController {
         verticalFollowVelocity = verticalFollowVelocity * 0.78 + targetOffset * 0.22;
         verticalFollowOffset = verticalFollowOffset * 0.82 + verticalFollowVelocity * 0.18;
 
-        float nextPitch = MathHelper.clamp(player.getPitch() + (float) verticalFollowOffset, -90.0f, 90.0f);
-        player.setPitch(nextPitch);
+        float nextPitch = Mth.clamp(player.getXRot() + (float) verticalFollowOffset, -90.0f, 90.0f);
+        player.setXRot(nextPitch);
         lastFollowY = currentY;
     }
 
-    private void updateMouseInertia(PlayerEntity player) {
-        if (!ConfigManager.config.motionCameraYawInertiaEnabled || !ConfigManager.config.motionCameraEnabled || firstPerson(MinecraftClient.getInstance()) || freeLookActive) {
+    private void updateMouseInertia(LocalPlayer player) {
+        if (!ConfigManager.config.motionCameraYawInertiaEnabled || !ConfigManager.config.motionCameraEnabled || firstPerson(Minecraft.getInstance()) || freeLookActive) {
             lastPlayerYaw = null;
             lastPlayerPitch = null;
             inertiaYawVelocity = 0f;
@@ -156,17 +154,17 @@ public final class CameraController {
             return;
         }
 
-        float currentYaw = player.getYaw();
-        float currentPitch = player.getPitch();
+        float currentYaw = player.getYRot();
+        float currentPitch = player.getXRot();
         if (lastPlayerYaw == null || lastPlayerPitch == null) {
             lastPlayerYaw = currentYaw;
             lastPlayerPitch = currentPitch;
             return;
         }
 
-        float deltaYaw = MathHelper.wrapDegrees(currentYaw - lastPlayerYaw);
+        float deltaYaw = Mth.wrapDegrees(currentYaw - lastPlayerYaw);
         float deltaPitch = currentPitch - lastPlayerPitch;
-        float response = MathHelper.clamp((float) ConfigManager.config.motionCameraYawInertia, 0.02f, 0.35f);
+        float response = Mth.clamp((float) ConfigManager.config.motionCameraYawInertia, 0.02f, 0.35f);
 
         // Use a continuous filter instead of a hard stop threshold so mouse motion feels natural.
         inertiaYawVelocity += (deltaYaw - inertiaYawVelocity) * response;
@@ -174,17 +172,17 @@ public final class CameraController {
         inertiaYawVelocity *= 1.0f - response * 0.12f;
         inertiaPitchVelocity *= 1.0f - response * 0.12f;
 
-        float nextYaw = MathHelper.wrapDegrees(currentYaw + inertiaYawVelocity);
-        float nextPitch = MathHelper.clamp(currentPitch + inertiaPitchVelocity, -90.0f, 90.0f);
-        player.setYaw(nextYaw);
-        player.setPitch(nextPitch);
+        float nextYaw = Mth.wrapDegrees(currentYaw + inertiaYawVelocity);
+        float nextPitch = Mth.clamp(currentPitch + inertiaPitchVelocity, -90.0f, 90.0f);
+        player.setYRot(nextYaw);
+        player.setXRot(nextPitch);
 
         lastPlayerYaw = nextYaw;
         lastPlayerPitch = nextPitch;
     }
 
-    private boolean firstPerson(MinecraftClient client) {
-        return client.options.getPerspective() == Perspective.FIRST_PERSON;
+    private boolean firstPerson(Minecraft client) {
+        return client.options.getCameraType() == Options.CameraType.FIRST_PERSON;
     }
 
     private void resetTransientState() {

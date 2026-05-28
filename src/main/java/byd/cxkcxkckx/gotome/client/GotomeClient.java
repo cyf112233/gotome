@@ -1,80 +1,79 @@
 package byd.cxkcxkckx.gotome.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.option.KeyBinding.Category;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.resources.ResourceLocation;
 
 public class GotomeClient {
-    public static KeyBinding motionCameraKey;
-    public static KeyBinding freeLookKey;
-    public static KeyBinding openConfigKey;
-    public static KeyBinding viewLockKey;
+    public static KeyMapping motionCameraKey;
+    public static KeyMapping freeLookKey;
+    public static KeyMapping openConfigKey;
+    public static KeyMapping viewLockKey;
     public static final CameraController cameraController = new CameraController();
-    private static Perspective lastPerspective = null;
+    private static Options.CameraType lastCameraType = null;
     private static boolean lastWorldLoaded = false;
 
-    private static final Category GOTOME_CATEGORY = Category.create(Identifier.of("category.gotome"));
+    private static final KeyMapping.Category GOTOME_CATEGORY = KeyMapping.Category.create(ResourceLocation.fromNamespaceAndPath("gotome", "category"));
 
     public static void init() {
-        motionCameraKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        motionCameraKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.gotome.motion_camera",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 ConfigManager.config.motionCameraKey,
                 GOTOME_CATEGORY
         ));
-        freeLookKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        freeLookKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.gotome.freelook",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 ConfigManager.config.freeLookKey,
                 GOTOME_CATEGORY
         ));
-        openConfigKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        openConfigKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.gotome.open_config",
-                InputUtil.Type.KEYSYM,
-                net.minecraft.client.util.InputUtil.UNKNOWN_KEY.getCode(),
+                InputConstants.Type.KEYSYM,
+                InputConstants.UNKNOWN.getValue(),
                 GOTOME_CATEGORY
         ));
-        viewLockKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        viewLockKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.gotome.view_lock",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 ConfigManager.config.viewLockKey,
                 GOTOME_CATEGORY
         ));
 
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (motionCameraKey.wasPressed()) {
+            while (motionCameraKey.consumeClick()) {
                 boolean wasEnabled = ConfigManager.config.motionCameraEnabled;
                 ConfigManager.config.motionCameraEnabled = !ConfigManager.config.motionCameraEnabled;
                 if (!wasEnabled && ConfigManager.config.motionCameraEnabled && client.player != null) {
-                    client.player.setYaw(client.player.getYaw() + 360f);
+                    client.player.setYRot(client.player.getYRot() + 360f);
                 }
             }
-            while (freeLookKey.wasPressed()) {
+            while (freeLookKey.consumeClick()) {
                 ConfigManager.config.freeLookEnabled = !ConfigManager.config.freeLookEnabled;
             }
-            while (openConfigKey.wasPressed()) {
-                MinecraftClient.getInstance().setScreen(ConfigScreen.create(null));
+            while (openConfigKey.consumeClick()) {
+                Minecraft.getInstance().setScreen(ConfigScreen.create(null));
             }
-            while (viewLockKey.wasPressed()) {
+            while (viewLockKey.consumeClick()) {
                 ConfigManager.config.viewLockEnabled = !ConfigManager.config.viewLockEnabled;
             }
 
             cameraController.tick(client);
 
-            Perspective currentPerspective = client.options.getPerspective();
-            boolean worldLoaded = client.world != null;
-            if (client.player != null && ConfigManager.config.motionCameraEnabled && !currentPerspective.isFirstPerson()) {
-                if ((lastPerspective != null && lastPerspective.isFirstPerson() && !currentPerspective.isFirstPerson()) || (!lastWorldLoaded && worldLoaded)) {
-                    client.player.setYaw(client.player.getYaw());
+            Options.CameraType currentCameraType = client.options.getCameraType();
+            boolean worldLoaded = client.level != null;
+            if (client.player != null && ConfigManager.config.motionCameraEnabled && !currentCameraType.isFirstPerson()) {
+                if ((lastCameraType != null && lastCameraType.isFirstPerson() && !currentCameraType.isFirstPerson()) || (!lastWorldLoaded && worldLoaded)) {
+                    client.player.setYRot(client.player.getYRot());
                 }
             }
-            lastPerspective = currentPerspective;
+            lastCameraType = currentCameraType;
             lastWorldLoaded = worldLoaded;
         });
     }
