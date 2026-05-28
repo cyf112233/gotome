@@ -4,8 +4,8 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.option.KeyBinding.Category;
 import net.minecraft.client.option.Perspective;
+import net.minecraft.client.util.InputUtil;
 
 public class GotomeClient {
     public static KeyBinding motionCameraKey;
@@ -16,32 +16,32 @@ public class GotomeClient {
     private static Perspective lastPerspective = null;
     private static boolean lastWorldLoaded = false;
 
-    private static final Category GOTOME_CATEGORY = Category.create("category.gotome");
+    private static final String GOTOME_CATEGORY = "category.gotome";
 
     public static void init() {
         motionCameraKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.motion_camera",
-                GOTOME_CATEGORY,
+                InputUtil.Type.KEYSYM,
                 ConfigManager.config.motionCameraKey,
-                null
+                GOTOME_CATEGORY
         ));
         freeLookKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.freelook",
-                GOTOME_CATEGORY,
+                InputUtil.Type.KEYSYM,
                 ConfigManager.config.freeLookKey,
-                null
+                GOTOME_CATEGORY
         ));
         openConfigKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.open_config",
-                GOTOME_CATEGORY,
-                net.minecraft.client.util.InputUtil.UNKNOWN_KEY.getCode(),
-                null
+                InputUtil.Type.KEYSYM,
+                InputUtil.UNKNOWN_KEY.getCode(),
+                GOTOME_CATEGORY
         ));
         viewLockKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.view_lock",
-                GOTOME_CATEGORY,
+                InputUtil.Type.KEYSYM,
                 ConfigManager.config.viewLockKey,
-                null
+                GOTOME_CATEGORY
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
