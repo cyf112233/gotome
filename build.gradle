@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.16.1'
+    id 'net.fabricmc.fabric-loom' version '1.16.1'
     id 'maven-publish'
 }
 
@@ -141,11 +141,10 @@ loom {
 
 dependencies {
     minecraft "com.mojang:minecraft:${targetMinecraftVersion}"
-    mappings "net.fabricmc:yarn:${targetYarnMappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:0.16.10"
+    implementation "net.fabricmc:fabric-loader:0.16.10"
     def fabricVersion = fabricApiVersionByMinecraft[targetMinecraftVersion] ?: resolveFabricApiVersion(targetMinecraftVersion)
-    modImplementation "net.fabricmc.fabric-api:fabric-api:$fabricVersion"
-    modImplementation "me.shedaniel.cloth:cloth-config-fabric:${targetClothConfigVersion}"
+    implementation "net.fabricmc.fabric-api:fabric-api:$fabricVersion"
+    implementation "me.shedaniel.cloth:cloth-config-fabric:${targetClothConfigVersion}"
 }
 
 processResources {
@@ -192,7 +191,7 @@ publishing {
 
 tasks.register('buildMatrix') {
     group = 'build'
-    description = 'Verify the mod builds against each supported 26.1.x target label and publish one universal package.'
+    description = 'Verify Java compilation for each supported 26.1.x label and publish one non-remapped universal jar.'
     doLast {
         def versions = (project.findProperty('supported_versions') ?: '').toString().split(',').collect { it.trim() }.findAll { it }
         if (versions.isEmpty()) {
@@ -203,20 +202,19 @@ tasks.register('buildMatrix') {
         outputDir.mkdirs()
         def gradleExe = System.getProperty('os.name').toLowerCase().contains('windows') ? 'gradlew.bat' : './gradlew'
         def releaseName = "${project.base.archivesName.get()}-26.1.x.jar"
+        def fabricVersion = (fabricApiVersionByMinecraft[targetMinecraftVersion] ?: targetFabricVersion).toString()
 
         versions.each { version ->
             println "========================================"
-            println "Verifying source compatibility label $version"
+            println "Verifying no-remap Java jar for label $version"
             println "Minecraft compile target: $targetMinecraftVersion"
-            println "Yarn mappings: $targetYarnMappings"
-            println "Fabric API: ${fabricApiVersionByMinecraft[targetMinecraftVersion] ?: targetFabricVersion}"
+            println "No mappings dependency is used for 26.1+ unobfuscated builds."
+            println "Fabric API: $fabricVersion"
             println "========================================"
 
-            def fabricVersion = (fabricApiVersionByMinecraft[targetMinecraftVersion] ?: targetFabricVersion).toString()
             def command = [
-                gradleExe.toString(), 'clean', 'build', '--stacktrace',
+                gradleExe.toString(), 'clean', 'jar', '--stacktrace',
                 "-Pminecraft_version=${targetMinecraftVersion}".toString(),
-                "-Pyarn_mappings=${targetYarnMappings}".toString(),
                 "-Pmod_version=${project.mod_version}".toString(),
                 "-Ploader_version=${targetLoaderVersion}".toString(),
                 "-Pfabric_version=${fabricVersion}".toString(),
@@ -238,7 +236,7 @@ tasks.register('buildMatrix') {
 
             int exitCode = process.waitFor()
             if (exitCode != 0) {
-                throw new GradleException("Gradle build failed while verifying version label $version (exit code $exitCode)")
+                throw new GradleException("No-remap jar build failed while verifying version label $version (exit code $exitCode)")
             }
         }
 
@@ -255,6 +253,6 @@ tasks.register('buildMatrix') {
             rename { releaseName }
         }
 
-        println "Published universal package: ${new File(outputDir, releaseName).absolutePath}"
+        println "Published non-remapped universal package: ${new File(outputDir, releaseName).absolutePath}"
     }
 }
