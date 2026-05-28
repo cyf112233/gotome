@@ -14,9 +14,7 @@ public final class ConfigScreen {
                 .setParentScreen(parent)
                 .setTitle(Text.literal("运动相机与自由视角设置"));
 
-        builder.setSavingRunnable(() -> {
-            // 当前配置直接写入共享 ConfigManager.config，无需额外持久化层。
-        });
+        builder.setSavingRunnable(ConfigManager::save);
 
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
         ConfigCategory cameraCategory = builder.getOrCreateCategory(Text.literal("运动相机设置"));
@@ -32,24 +30,18 @@ public final class ConfigScreen {
                 .setSaveConsumer(value -> ConfigManager.config.motionCameraYawInertiaEnabled = value)
                 .build());
 
-        cameraCategory.addEntry(entryBuilder.startFloatField(Text.literal("视角惯性强度"), (float) ConfigManager.config.motionCameraYawInertia)
-                .setDefaultValue(0.15f)
-                .setMin(0.0f)
-                .setMax(0.5f)
+        cameraCategory.addEntry(entryBuilder.startDoubleField(Text.literal("视角惯性强度"), ConfigManager.config.motionCameraYawInertia)
+                .setDefaultValue(0.15)
                 .setSaveConsumer(value -> ConfigManager.config.motionCameraYawInertia = value)
                 .build());
 
-        cameraCategory.addEntry(entryBuilder.startFloatField(Text.literal("运动相机平滑度"), (float) ConfigManager.config.motionCameraSmoothness)
-                .setDefaultValue(0.3f)
-                .setMin(0.1f)
-                .setMax(0.95f)
+        cameraCategory.addEntry(entryBuilder.startDoubleField(Text.literal("运动相机平滑度"), ConfigManager.config.motionCameraSmoothness)
+                .setDefaultValue(0.3)
                 .setSaveConsumer(value -> ConfigManager.config.motionCameraSmoothness = value)
                 .build());
 
-        cameraCategory.addEntry(entryBuilder.startFloatField(Text.literal("运动相机最大跟随距离"), (float) ConfigManager.config.motionCameraMaxDistance)
-                .setDefaultValue(20.0f)
-                .setMin(1.0f)
-                .setMax(50.0f)
+        cameraCategory.addEntry(entryBuilder.startDoubleField(Text.literal("运动相机最大跟随距离"), ConfigManager.config.motionCameraMaxDistance)
+                .setDefaultValue(20.0)
                 .setSaveConsumer(value -> ConfigManager.config.motionCameraMaxDistance = value)
                 .build());
 
@@ -70,15 +62,11 @@ public final class ConfigScreen {
 
         freeLookCategory.addEntry(entryBuilder.startFloatField(Text.literal("自由视角水平灵敏度"), ConfigManager.config.freeLookSensitivity)
                 .setDefaultValue(1.0f)
-                .setMin(0.1f)
-                .setMax(2.0f)
                 .setSaveConsumer(value -> ConfigManager.config.freeLookSensitivity = value)
                 .build());
 
         freeLookCategory.addEntry(entryBuilder.startFloatField(Text.literal("自由视角垂直灵敏度"), ConfigManager.config.freeLookVerticalSensitivity)
                 .setDefaultValue(1.0f)
-                .setMin(0.1f)
-                .setMax(2.0f)
                 .setSaveConsumer(value -> ConfigManager.config.freeLookVerticalSensitivity = value)
                 .build());
 

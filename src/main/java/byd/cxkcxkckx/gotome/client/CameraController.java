@@ -80,16 +80,22 @@ public final class CameraController {
         }
 
         double distance = cameraPos.distanceTo(playerPos);
-        double maxDist = Math.max(1.0, ConfigManager.config.motionCameraMaxDistance);
+        double maxDist = ConfigManager.config.motionCameraMaxDistance;
+        if (!Double.isFinite(maxDist) || maxDist <= 0.0) {
+            maxDist = 1.0;
+        }
         if (distance > maxDist) {
             cameraPos = new Vec3d(playerPos.x, playerPos.y + 1.0, playerPos.z);
             return;
         }
 
-        double smoothFactor = MathHelper.clamp(ConfigManager.config.motionCameraSmoothness, 0.05, 0.98);
+        double smoothFactor = ConfigManager.config.motionCameraSmoothness;
+        if (!Double.isFinite(smoothFactor)) {
+            smoothFactor = 0.3;
+        }
         double dynamicFactor = smoothFactor * (1.0 - Math.exp(-distance / maxDist));
-        double horizontalFactor = MathHelper.clamp(dynamicFactor, 0.02, 0.9);
-        double verticalFactor = MathHelper.clamp(horizontalFactor + 0.12, 0.05, 0.95);
+        double horizontalFactor = dynamicFactor;
+        double verticalFactor = horizontalFactor + 0.12;
 
         double targetY = playerPos.y + client.player.getEyeHeight(client.player.getPose());
         double dx = playerPos.x - cameraPos.x;
@@ -134,7 +140,10 @@ public final class CameraController {
         }
 
         double deltaY = currentY - lastFollowY;
-        double sensitivity = Math.max(0.1f, ConfigManager.config.freeLookVerticalSensitivity);
+        double sensitivity = ConfigManager.config.freeLookVerticalSensitivity;
+        if (!Double.isFinite(sensitivity)) {
+            sensitivity = 1.0;
+        }
         double targetOffset = -deltaY * sensitivity * 2.5;
 
         verticalFollowVelocity = verticalFollowVelocity * 0.78 + targetOffset * 0.22;
@@ -164,7 +173,10 @@ public final class CameraController {
 
         float deltaYaw = MathHelper.wrapDegrees(currentYaw - lastPlayerYaw);
         float deltaPitch = currentPitch - lastPlayerPitch;
-        float response = MathHelper.clamp((float) ConfigManager.config.motionCameraYawInertia, 0.02f, 0.35f);
+        float response = (float) ConfigManager.config.motionCameraYawInertia;
+        if (!Float.isFinite(response)) {
+            response = 0.15f;
+        }
 
         // Use a continuous filter instead of a hard stop threshold so mouse motion feels natural.
         inertiaYawVelocity += (deltaYaw - inertiaYawVelocity) * response;
@@ -183,6 +195,10 @@ public final class CameraController {
 
     private boolean firstPerson(MinecraftClient client) {
         return client.options.getPerspective() == Perspective.FIRST_PERSON;
+    }
+
+    public void resetCameraPosition(Vec3d position) {
+        cameraPos = position;
     }
 
     private void resetTransientState() {

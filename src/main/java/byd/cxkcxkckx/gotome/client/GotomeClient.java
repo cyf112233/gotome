@@ -5,6 +5,8 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.util.math.Vec3d;
 
 public class GotomeClient {
     public static KeyBinding motionCameraKey;
@@ -16,6 +18,8 @@ public class GotomeClient {
     private static boolean lastWorldLoaded = false;
 
     public static void init() {
+        ConfigManager.load();
+
         motionCameraKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.motion_camera",
                 ConfigManager.config.motionCameraKey,
@@ -28,7 +32,7 @@ public class GotomeClient {
         ));
         openConfigKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.open_config",
-                net.minecraft.client.util.InputUtil.UNKNOWN_KEY.getCode(),
+                InputUtil.UNKNOWN_KEY.getCode(),
                 "category.gotome"
         ));
         viewLockKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -41,18 +45,21 @@ public class GotomeClient {
             while (motionCameraKey.wasPressed()) {
                 boolean wasEnabled = ConfigManager.config.motionCameraEnabled;
                 ConfigManager.config.motionCameraEnabled = !ConfigManager.config.motionCameraEnabled;
+                ConfigManager.save();
                 if (!wasEnabled && ConfigManager.config.motionCameraEnabled && client.player != null) {
                     client.player.setYaw(client.player.getYaw() + 360f);
                 }
             }
             while (freeLookKey.wasPressed()) {
                 ConfigManager.config.freeLookEnabled = !ConfigManager.config.freeLookEnabled;
+                ConfigManager.save();
             }
             while (openConfigKey.wasPressed()) {
                 MinecraftClient.getInstance().setScreen(ConfigScreen.create(null));
             }
             while (viewLockKey.wasPressed()) {
                 ConfigManager.config.viewLockEnabled = !ConfigManager.config.viewLockEnabled;
+                ConfigManager.save();
             }
 
             cameraController.tick(client);
@@ -61,7 +68,11 @@ public class GotomeClient {
             boolean worldLoaded = client.world != null;
             if (client.player != null && ConfigManager.config.motionCameraEnabled && !currentPerspective.isFirstPerson()) {
                 if ((lastPerspective != null && lastPerspective.isFirstPerson() && !currentPerspective.isFirstPerson()) || (!lastWorldLoaded && worldLoaded)) {
-                    client.player.setYaw(client.player.getYaw());
+                    cameraController.resetCameraPosition(new Vec3d(
+                            client.player.getX(),
+                            client.player.getY() + 1.0,
+                            client.player.getZ()
+                    ));
                 }
             }
             lastPerspective = currentPerspective;
