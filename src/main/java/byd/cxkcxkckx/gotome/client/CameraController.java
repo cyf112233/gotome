@@ -108,7 +108,7 @@ public final class CameraController {
             return;
         }
 
-        boolean keyDown = InputConstants.isKeyDown(client.getWindow().getWindow(), ConfigManager.config.freeLookKey);
+        boolean keyDown = InputConstants.isKeyDown(client.getWindow(), ConfigManager.config.freeLookKey);
         if (keyDown && !freeLookActive) {
             freeLookActive = true;
             freeLookYaw = player.getYRot();
