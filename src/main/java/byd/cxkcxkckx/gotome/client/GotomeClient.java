@@ -6,6 +6,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.KeyBinding.Category;
 import net.minecraft.client.option.Perspective;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
 
 public class GotomeClient {
@@ -22,28 +23,29 @@ public class GotomeClient {
     public static void init() {
         motionCameraKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.motion_camera",
-                GOTOME_CATEGORY,
+                InputUtil.Type.KEYSYM,
                 ConfigManager.config.motionCameraKey,
-                null
+                GOTOME_CATEGORY
         ));
         freeLookKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.freelook",
-                GOTOME_CATEGORY,
+                InputUtil.Type.KEYSYM,
                 ConfigManager.config.freeLookKey,
-                null
+                GOTOME_CATEGORY
         ));
         openConfigKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.open_config",
-                GOTOME_CATEGORY,
+                InputUtil.Type.KEYSYM,
                 net.minecraft.client.util.InputUtil.UNKNOWN_KEY.getCode(),
-                null
+                GOTOME_CATEGORY
         ));
         viewLockKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.view_lock",
-                GOTOME_CATEGORY,
+                InputUtil.Type.KEYSYM,
                 ConfigManager.config.viewLockKey,
-                null
+                GOTOME_CATEGORY
         ));
+
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (motionCameraKey.wasPressed()) {
