@@ -232,7 +232,6 @@ tasks.register('buildMatrix') {
             copy {
                 from fileTree('build/libs')
                 into outputDir
-                rename { fileName -> "${version}-${fileName}" }
             }
         }
     }
