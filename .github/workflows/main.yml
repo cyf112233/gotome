@@ -69,7 +69,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ env.TAG_NAME }}
-        name: 26.1+---${{ env.RELEASE_TITLE }}
+        name: 26.1-26.1.2---${{ env.RELEASE_TITLE }}
         body: |
           自动构建发布
           - 构建时间（UTC）：${{ env.BUILD_DATE_UTC }}
