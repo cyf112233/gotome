@@ -34,6 +34,7 @@ public final class CameraController {
             return;
         }
 
+        updateCameraPosition(client, player.getPos());
         updateFreeLookState(client, player);
         updateMovementFollow(client, player);
         updateMouseInertia(player);
@@ -46,7 +47,6 @@ public final class CameraController {
         if (client.player.isSleeping()) return;
         if (ConfigManager.config.motionCameraDisableFirstPers && firstPerson(client)) return;
 
-        updateCameraPosition(client, playerPos);
         if (cameraPos == null) return;
         argsHolder[0] = cameraPos.x;
         argsHolder[1] = cameraPos.y;
