@@ -3,6 +3,7 @@ package byd.cxkcxkckx.gotome.client;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.util.Window;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -37,12 +38,12 @@ public final class CameraController {
         updateMouseInertia(player);
     }
 
-    public void applyCameraPosition(MinecraftClient client, Vec3d playerPos, float tickDelta, Object[] argsHolder) {
+    public void applyCameraPosition(MinecraftClient client, Vec3d cameraAnchorPos, float tickDelta, Object[] argsHolder) {
         if (client.player == null) return;
         if (!ConfigManager.config.motionCameraEnabled) return;
         if (ConfigManager.config.motionCameraDisableFirstPers && firstPerson(client)) return;
 
-        updateCameraPosition(client, playerPos, tickDelta);
+        updateCameraPosition(client, cameraAnchorPos, tickDelta);
         Vec3d pos = getCameraPos(client);
         argsHolder[0] = pos.x;
         argsHolder[1] = pos.y;
@@ -74,15 +75,15 @@ public final class CameraController {
         return cameraPos;
     }
 
-    private void updateCameraPosition(MinecraftClient client, Vec3d playerPos, float tickDelta) {
+    private void updateCameraPosition(MinecraftClient client, Vec3d cameraAnchorPos, float tickDelta) {
         if (cameraPos == null) {
-            cameraPos = new Vec3d(playerPos.x, playerPos.y + 1.0, playerPos.z);
+            cameraPos = new Vec3d(cameraAnchorPos.x, cameraAnchorPos.y + 1.0, cameraAnchorPos.z);
         }
 
-        double distance = cameraPos.distanceTo(playerPos);
+        double distance = cameraPos.distanceTo(cameraAnchorPos);
         double maxDist = Math.max(1.0, ConfigManager.config.motionCameraMaxDistance);
         if (distance > maxDist) {
-            cameraPos = new Vec3d(playerPos.x, playerPos.y + 1.0, playerPos.z);
+            cameraPos = new Vec3d(cameraAnchorPos.x, cameraAnchorPos.y + 1.0, cameraAnchorPos.z);
             return;
         }
 
@@ -91,10 +92,10 @@ public final class CameraController {
         double horizontalFactor = MathHelper.clamp(dynamicFactor, 0.02, 0.9);
         double verticalFactor = MathHelper.clamp(horizontalFactor + 0.12, 0.05, 0.95);
 
-        double targetY = playerPos.y + client.player.getEyeHeight(client.player.getPose());
-        double dx = playerPos.x - cameraPos.x;
+        double targetY = cameraAnchorPos.y + client.player.getEyeHeight(client.player.getPose());
+        double dx = cameraAnchorPos.x - cameraPos.x;
         double dy = targetY - cameraPos.y;
-        double dz = playerPos.z - cameraPos.z;
+        double dz = cameraAnchorPos.z - cameraPos.z;
 
         cameraPos = new Vec3d(
                 cameraPos.x + dx * horizontalFactor,
@@ -109,7 +110,8 @@ public final class CameraController {
             return;
         }
 
-        boolean keyDown = InputUtil.isKeyPressed(client.getWindow().getHandle(), ConfigManager.config.freeLookKey);
+        Window window = client.getWindow();
+        boolean keyDown = InputUtil.isKeyPressed(window, ConfigManager.config.freeLookKey);
         if (keyDown && !freeLookActive) {
             freeLookActive = true;
             freeLookYaw = player.getYaw();

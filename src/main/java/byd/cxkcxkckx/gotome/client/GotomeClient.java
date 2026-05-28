@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.option.KeyBinding.Category;
 import net.minecraft.client.option.Perspective;
 
 public class GotomeClient {
@@ -15,26 +16,32 @@ public class GotomeClient {
     private static Perspective lastPerspective = null;
     private static boolean lastWorldLoaded = false;
 
+    private static final Category GOTOME_CATEGORY = Category.create("category.gotome");
+
     public static void init() {
         motionCameraKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.motion_camera",
+                GOTOME_CATEGORY,
                 ConfigManager.config.motionCameraKey,
-                "category.gotome"
+                null
         ));
         freeLookKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.freelook",
+                GOTOME_CATEGORY,
                 ConfigManager.config.freeLookKey,
-                "category.gotome"
+                null
         ));
         openConfigKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.open_config",
+                GOTOME_CATEGORY,
                 net.minecraft.client.util.InputUtil.UNKNOWN_KEY.getCode(),
-                "category.gotome"
+                null
         ));
         viewLockKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gotome.view_lock",
+                GOTOME_CATEGORY,
                 ConfigManager.config.viewLockKey,
-                "category.gotome"
+                null
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

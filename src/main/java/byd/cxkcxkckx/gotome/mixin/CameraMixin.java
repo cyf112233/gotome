@@ -35,8 +35,9 @@ public abstract class CameraMixin {
     @ModifyArgs(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V"))
     private void onSetCameraPosition(Args args) {
         if (MinecraftClient.getInstance().player == null) return;
-        Object[] coords = new Object[] { args.get(0), args.get(1), args.get(2) };
-        GotomeClient.cameraController.applyCameraPosition(MinecraftClient.getInstance(), MinecraftClient.getInstance().player.getPos(), tickDelta, coords);
+        Vec3d cameraAnchorPos = new Vec3d((Double) args.get(0), (Double) args.get(1), (Double) args.get(2));
+        Object[] coords = new Object[] { cameraAnchorPos.x, cameraAnchorPos.y, cameraAnchorPos.z };
+        GotomeClient.cameraController.applyCameraPosition(MinecraftClient.getInstance(), cameraAnchorPos, tickDelta, coords);
         args.set(0, (Double) coords[0]);
         args.set(1, (Double) coords[1]);
         args.set(2, (Double) coords[2]);
