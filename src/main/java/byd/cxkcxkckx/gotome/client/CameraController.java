@@ -19,6 +19,7 @@ public final class CameraController {
     private float inertiaPitchVelocity;
     private double verticalFollowOffset;
     private double verticalFollowVelocity;
+    private static final double SIDE_SPEED_THRESHOLD = 0.01;
 
     public void tick(MinecraftClient client) {
         PlayerEntity player = client.player;
@@ -37,6 +38,7 @@ public final class CameraController {
         updateCameraPosition(client, player.getPos());
         updateFreeLookState(client, player);
         updateMovementFollow(client, player);
+        updateSideMovementYawFollow(player);
         updateMouseInertia(player);
     }
 
@@ -158,6 +160,23 @@ public final class CameraController {
         float nextPitch = MathHelper.clamp(player.getPitch() + (float) verticalFollowOffset, -90.0f, 90.0f);
         player.setPitch(nextPitch);
         lastFollowY = currentY;
+    }
+
+    private void updateSideMovementYawFollow(PlayerEntity player) {
+        if (!ConfigManager.config.freeLookEnabled || freeLookActive) {
+            return;
+        }
+
+        Vec3d velocity = player.getVelocity();
+        float yawRad = (float) Math.toRadians(player.getYaw());
+        Vec3d forward = new Vec3d(-Math.sin(yawRad), 0, Math.cos(yawRad));
+        Vec3d left = new Vec3d(-forward.z, 0, forward.x);
+        double sideSpeed = velocity.dotProduct(left);
+
+        if (Math.abs(sideSpeed) > SIDE_SPEED_THRESHOLD) {
+            float strength = MathHelper.clamp(ConfigManager.config.sideMovementYawStrength, 0.0f, 10.0f);
+            player.setYaw(MathHelper.wrapDegrees(player.getYaw() + (float) (strength * sideSpeed)));
+        }
     }
 
     private void updateMouseInertia(PlayerEntity player) {

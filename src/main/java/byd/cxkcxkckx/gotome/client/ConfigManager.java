@@ -65,6 +65,7 @@ public final class ConfigManager {
         public boolean motionCameraYawInertiaEnabled = false;
         public double motionCameraYawInertia = 0.15;
         public float freeLookVerticalSensitivity = 1.0f;
+        public float sideMovementYawStrength = 2.0f;
         public boolean viewLockEnabled = false;
         public int viewLockKey = GLFW.GLFW_KEY_F9;
     }

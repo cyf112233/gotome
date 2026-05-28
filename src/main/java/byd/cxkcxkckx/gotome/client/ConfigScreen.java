@@ -86,6 +86,13 @@ public final class ConfigScreen {
                 .setSaveConsumer(value -> ConfigManager.config.freeLookVerticalSensitivity = value)
                 .build());
 
+        freeLookCategory.addEntry(entryBuilder.startFloatField(Text.literal("左右移动视角跟随强度"), ConfigManager.config.sideMovementYawStrength)
+                .setDefaultValue(2.0f)
+                .setMin(0.0f)
+                .setMax(10.0f)
+                .setSaveConsumer(value -> ConfigManager.config.sideMovementYawStrength = value)
+                .build());
+
         return builder.build();
     }
 }
