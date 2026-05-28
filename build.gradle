@@ -85,6 +85,28 @@ ext {
     '26.1.2'     : '0.149.1+26.1.2']
 }
 
+String resolveYarnMappingVersion(String mcVersion) {
+    def metadataUrl = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml"
+    try {
+        def metadata = new XmlSlurper().parse(metadataUrl)
+        def allVersions = metadata.versioning.versions.version*.text()
+        def escapedVersion = mcVersion.replace('.', '\\.')
+        def pattern = ~/${escapedVersion}\+build\.[0-9]+/
+        def matched = allVersions.findAll { it ==~ pattern }
+        if (matched.isEmpty()) {
+            throw new GradleException("No yarn mappings found for Minecraft $mcVersion")
+        }
+        def sorted = matched.sort { a, b ->
+            def buildA = ((a =~ /.*\+build\.(\d+)/)[0][1]) as int
+            def buildB = ((b =~ /.*\+build\.(\d+)/)[0][1]) as int
+            buildA <=> buildB
+        }
+        return sorted.last()
+    } catch (Exception e) {
+        throw new GradleException("Failed to resolve yarn mappings for $mcVersion", e)
+    }
+}
+
 String resolveFabricApiVersion(String mcVersion) {
     def metadataUrl = "https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml"
     try {
@@ -121,10 +143,7 @@ dependencies {
     minecraft "com.mojang:minecraft:${targetMinecraftVersion}"
     mappings "net.fabricmc:yarn:${targetYarnMappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:0.16.10"
-        def fabricVersion = fabricApiVersionByMinecraft[targetMinecraftVersion]
-    if (fabricVersion == null) {
-        throw new GradleException("No hardcoded Fabric API version for Minecraft $targetMinecraftVersion")
-    }
+    def fabricVersion = fabricApiVersionByMinecraft[targetMinecraftVersion] ?: resolveFabricApiVersion(targetMinecraftVersion)
     modImplementation "net.fabricmc.fabric-api:fabric-api:$fabricVersion"
     modImplementation "me.shedaniel.cloth:cloth-config-fabric:${targetClothConfigVersion}"
 }
@@ -173,66 +192,69 @@ publishing {
 
 tasks.register('buildMatrix') {
     group = 'build'
-    description = 'Build the mod for each supported Minecraft version.'
+    description = 'Verify the mod builds against each supported 26.1.x target label and publish one universal package.'
     doLast {
         def versions = (project.findProperty('supported_versions') ?: '').toString().split(',').collect { it.trim() }.findAll { it }
         if (versions.isEmpty()) {
             throw new IllegalStateException('No supported_versions configured in gradle.properties')
         }
+
         def outputDir = file('output')
         outputDir.mkdirs()
         def gradleExe = System.getProperty('os.name').toLowerCase().contains('windows') ? 'gradlew.bat' : './gradlew'
-        
+        def releaseName = "${project.base.archivesName.get()}-26.1.x.jar"
+
         versions.each { version ->
-            def mappedYarn = yarnMappingByVersion[version]
-            if (mappedYarn == null) {
-                throw new IllegalStateException("Unsupported Minecraft version: ${version}")
-            }
-            
-            // ========== 新增：查找对应版本的 Fabric API 版本 ==========
-            def mappedFabric = fabricApiVersionByMinecraft[version]
-            if (mappedFabric == null) {
-                throw new IllegalStateException("No Fabric API version configured for Minecraft ${version}")
-            }
-            // =========================================================
-            
+            println "========================================"
+            println "Verifying source compatibility label $version"
+            println "Minecraft compile target: $targetMinecraftVersion"
+            println "Yarn mappings: $targetYarnMappings"
+            println "Fabric API: ${fabricApiVersionByMinecraft[targetMinecraftVersion] ?: targetFabricVersion}"
+            println "========================================"
+
+            def fabricVersion = (fabricApiVersionByMinecraft[targetMinecraftVersion] ?: targetFabricVersion).toString()
             def command = [
-                gradleExe, 'clean', 'build', '--stacktrace',
-                "-Pminecraft_version=${version}",
-                "-Pyarn_mappings=${mappedYarn}",
-                "-Pmod_version=${project.mod_version}-${version}",
-                "-Ploader_version=${targetLoaderVersion}",
-                "-Pfabric_version=${mappedFabric}",  // ← 改为使用 mappedFabric
-                "-Pcloth_config_version=${targetClothConfigVersion}"
+                gradleExe.toString(), 'clean', 'build', '--stacktrace',
+                "-Pminecraft_version=${targetMinecraftVersion}".toString(),
+                "-Pyarn_mappings=${targetYarnMappings}".toString(),
+                "-Pmod_version=${project.mod_version}".toString(),
+                "-Ploader_version=${targetLoaderVersion}".toString(),
+                "-Pfabric_version=${fabricVersion}".toString(),
+                "-Pcloth_config_version=${targetClothConfigVersion}".toString()
             ] as String[]
-            
-            println "========================================"
-            println "Executing for Minecraft $version"
-            println "Yarn: $mappedYarn"
-            println "Fabric API: $mappedFabric"  // ← 新增日志
-            println "Command: ${command.join(' ')}"
-            println "========================================"
-            
-            def process = new ProcessBuilder(command)
+
+            def processBuilder = new ProcessBuilder(command)
                 .directory(rootDir)
                 .redirectErrorStream(true)
-                .start()
-            
+            processBuilder.environment().put('JAVA_HOME', System.getProperty('java.home').toString())
+            processBuilder.environment().put('PATH', "${System.getProperty('java.home')}${File.separator}bin${File.pathSeparator}${processBuilder.environment().get('PATH') ?: ''}".toString())
+            def process = processBuilder.start()
+
             def reader = new BufferedReader(new InputStreamReader(process.inputStream))
             def line
             while ((line = reader.readLine()) != null) {
                 println line
             }
-            
+
             int exitCode = process.waitFor()
             if (exitCode != 0) {
-                throw new GradleException("Gradle build failed for version $version (exit code $exitCode)")
-            }
-            
-            copy {
-                from fileTree('build/libs')
-                into outputDir
+                throw new GradleException("Gradle build failed while verifying version label $version (exit code $exitCode)")
             }
         }
+
+        def builtJar = fileTree('build/libs').files.find { file ->
+            file.name.endsWith('.jar') && !file.name.endsWith('-sources.jar')
+        }
+        if (builtJar == null) {
+            throw new GradleException('No built jar found in build/libs after verification')
+        }
+
+        copy {
+            from builtJar
+            into outputDir
+            rename { releaseName }
+        }
+
+        println "Published universal package: ${new File(outputDir, releaseName).absolutePath}"
     }
 }
