@@ -19,7 +19,10 @@ public final class CameraController {
     private float inertiaPitchVelocity;
     private double verticalFollowOffset;
     private double verticalFollowVelocity;
+    private long lastCameraUpdateNanos;
     private static final double SIDE_SPEED_THRESHOLD = 0.01;
+    private static final double BASE_FRAME_SECONDS = 1.0 / 60.0;
+    private static final double MAX_FRAME_SECONDS = 0.1;
 
     public void tick(MinecraftClient client) {
         PlayerEntity player = client.player;
@@ -35,7 +38,6 @@ public final class CameraController {
             return;
         }
 
-        updateCameraPosition(client, player.getPos());
         updateFreeLookState(client, player);
         updateMovementFollow(client, player);
         updateSideMovementYawFollow(player);
@@ -49,6 +51,7 @@ public final class CameraController {
         if (client.player.isSleeping()) return;
         if (ConfigManager.config.motionCameraDisableFirstPers && firstPerson(client)) return;
 
+        updateCameraPosition(client, playerPos);
         if (cameraPos == null) return;
         argsHolder[0] = cameraPos.x;
         argsHolder[1] = cameraPos.y;
@@ -108,16 +111,31 @@ public final class CameraController {
 
         double smoothFactor = MathHelper.clamp(ConfigManager.config.motionCameraSmoothness, 0.1, 0.95);
         double dynamicFactor = smoothFactor * (1.0 - Math.exp(-distance / maxDist));
+        double frameScale = getFrameScale();
+        double normalizedFactor = 1.0 - Math.pow(1.0 - dynamicFactor, frameScale);
         double targetY = playerPos.y + client.player.getEyeHeight(client.player.getPose());
         double dx = playerPos.x - cameraPos.x;
         double dy = targetY - cameraPos.y;
         double dz = playerPos.z - cameraPos.z;
 
         cameraPos = new Vec3d(
-                cameraPos.x + dx * dynamicFactor,
-                cameraPos.y + dy * dynamicFactor,
-                cameraPos.z + dz * dynamicFactor
+                cameraPos.x + dx * normalizedFactor,
+                cameraPos.y + dy * normalizedFactor,
+                cameraPos.z + dz * normalizedFactor
         );
+    }
+
+    private double getFrameScale() {
+        long now = System.nanoTime();
+        if (lastCameraUpdateNanos == 0L) {
+            lastCameraUpdateNanos = now;
+            return 1.0;
+        }
+
+        double elapsedSeconds = (now - lastCameraUpdateNanos) / 1_000_000_000.0;
+        lastCameraUpdateNanos = now;
+        elapsedSeconds = MathHelper.clamp(elapsedSeconds, 0.0, MAX_FRAME_SECONDS);
+        return elapsedSeconds / BASE_FRAME_SECONDS;
     }
 
     private void updateFreeLookState(MinecraftClient client, PlayerEntity player) {
@@ -231,5 +249,6 @@ public final class CameraController {
         inertiaPitchVelocity = 0f;
         verticalFollowOffset = 0.0;
         verticalFollowVelocity = 0.0;
+        lastCameraUpdateNanos = 0L;
     }
 }

@@ -3,6 +3,7 @@ package byd.cxkcxkckx.gotome.client;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
@@ -18,7 +19,7 @@ public final class ConfigScreen {
         builder.setSavingRunnable(() -> {
             ConfigManager.save();
             if (!wasMotionCameraEnabled && ConfigManager.config.motionCameraEnabled) {
-                GotomeClient.cameraController.resetCameraPosition(net.minecraft.client.MinecraftClient.getInstance());
+                GotomeClient.cameraController.resetCameraPosition(MinecraftClient.getInstance());
             }
         });
 
