@@ -39,9 +39,6 @@ public final class CameraController {
         }
 
         updateFreeLookState(client, player);
-        updateMovementFollow(client, player);
-        updateSideMovementYawFollow(player);
-        updateMouseInertia(player);
     }
 
     public void applyCameraPosition(MinecraftClient client, Vec3d playerPos, float tickDelta, Object[] argsHolder) {
@@ -51,7 +48,11 @@ public final class CameraController {
         if (client.player.isSleeping()) return;
         if (ConfigManager.config.motionCameraDisableFirstPers && firstPerson(client)) return;
 
-        updateCameraPosition(client, playerPos);
+        double frameScale = updateCameraPosition(client, playerPos);
+        PlayerEntity player = client.player;
+        updateMovementFollow(player, frameScale);
+        updateSideMovementYawFollow(player, frameScale);
+        updateMouseInertia(player, frameScale);
         if (cameraPos == null) return;
         argsHolder[0] = cameraPos.x;
         argsHolder[1] = cameraPos.y;
@@ -96,23 +97,23 @@ public final class CameraController {
         return cameraPos;
     }
 
-    private void updateCameraPosition(MinecraftClient client, Vec3d playerPos) {
+    private double updateCameraPosition(MinecraftClient client, Vec3d playerPos) {
+        double frameScale = getFrameScale();
         if (cameraPos == null) {
             resetCameraPosition(client);
         }
-        if (cameraPos == null) return;
+        if (cameraPos == null) return frameScale;
 
         double distance = cameraPos.distanceTo(playerPos);
         double maxDist = Math.max(1.0, ConfigManager.config.motionCameraMaxDistance);
         if (distance > maxDist) {
             resetCameraPosition(client);
-            return;
+            return frameScale;
         }
 
         double smoothFactor = MathHelper.clamp(ConfigManager.config.motionCameraSmoothness, 0.1, 0.95);
         double dynamicFactor = smoothFactor * (1.0 - Math.exp(-distance / maxDist));
-        double frameScale = getFrameScale();
-        double normalizedFactor = 1.0 - Math.pow(1.0 - dynamicFactor, frameScale);
+        double normalizedFactor = normalizeFactor(dynamicFactor, frameScale);
         double targetY = playerPos.y + client.player.getEyeHeight(client.player.getPose());
         double dx = playerPos.x - cameraPos.x;
         double dy = targetY - cameraPos.y;
@@ -123,6 +124,12 @@ public final class CameraController {
                 cameraPos.y + dy * normalizedFactor,
                 cameraPos.z + dz * normalizedFactor
         );
+        return frameScale;
+    }
+
+    private double normalizeFactor(double factor, double frameScale) {
+        factor = MathHelper.clamp(factor, 0.0, 0.999);
+        return 1.0 - Math.pow(1.0 - factor, frameScale);
     }
 
     private double getFrameScale() {
@@ -154,7 +161,7 @@ public final class CameraController {
         }
     }
 
-    private void updateMovementFollow(MinecraftClient client, PlayerEntity player) {
+    private void updateMovementFollow(PlayerEntity player, double frameScale) {
         if (!ConfigManager.config.freeLookEnabled || freeLookActive) {
             lastFollowY = null;
             verticalFollowOffset = 0.0;
@@ -171,16 +178,20 @@ public final class CameraController {
         double deltaY = currentY - lastFollowY;
         double sensitivity = Math.max(0.1f, ConfigManager.config.freeLookVerticalSensitivity);
         double targetOffset = -deltaY * sensitivity * 2.5;
+        double velocityFactor = normalizeFactor(0.22, frameScale);
+        double offsetFactor = normalizeFactor(0.18, frameScale);
+        double velocityDecay = Math.pow(0.78, frameScale);
+        double offsetDecay = Math.pow(0.82, frameScale);
 
-        verticalFollowVelocity = verticalFollowVelocity * 0.78 + targetOffset * 0.22;
-        verticalFollowOffset = verticalFollowOffset * 0.82 + verticalFollowVelocity * 0.18;
+        verticalFollowVelocity = verticalFollowVelocity * velocityDecay + targetOffset * velocityFactor;
+        verticalFollowOffset = verticalFollowOffset * offsetDecay + verticalFollowVelocity * offsetFactor;
 
         float nextPitch = MathHelper.clamp(player.getPitch() + (float) verticalFollowOffset, -90.0f, 90.0f);
         player.setPitch(nextPitch);
         lastFollowY = currentY;
     }
 
-    private void updateSideMovementYawFollow(PlayerEntity player) {
+    private void updateSideMovementYawFollow(PlayerEntity player, double frameScale) {
         if (!ConfigManager.config.freeLookEnabled || freeLookActive) {
             return;
         }
@@ -193,11 +204,11 @@ public final class CameraController {
 
         if (Math.abs(sideSpeed) > SIDE_SPEED_THRESHOLD) {
             float strength = MathHelper.clamp(ConfigManager.config.sideMovementYawStrength, 0.0f, 10.0f);
-            player.setYaw(MathHelper.wrapDegrees(player.getYaw() + (float) (strength * sideSpeed)));
+            player.setYaw(MathHelper.wrapDegrees(player.getYaw() + (float) (strength * sideSpeed * frameScale)));
         }
     }
 
-    private void updateMouseInertia(PlayerEntity player) {
+    private void updateMouseInertia(PlayerEntity player, double frameScale) {
         if (!ConfigManager.config.motionCameraYawInertiaEnabled || freeLookActive) {
             lastPlayerYaw = null;
             lastPlayerPitch = null;
@@ -217,11 +228,14 @@ public final class CameraController {
         float deltaYaw = MathHelper.wrapDegrees(currentYaw - lastPlayerYaw);
         float deltaPitch = currentPitch - lastPlayerPitch;
         float response = MathHelper.clamp((float) ConfigManager.config.motionCameraYawInertia, 0.02f, 0.35f);
+        float normalizedResponse = (float) normalizeFactor(response, frameScale);
+        float yawDecay = (float) Math.pow(1.0f - response * 0.12f, frameScale);
+        float pitchDecay = (float) Math.pow(1.0f - response * 0.12f, frameScale);
 
-        inertiaYawVelocity += (deltaYaw - inertiaYawVelocity) * response;
-        inertiaPitchVelocity += (deltaPitch - inertiaPitchVelocity) * response;
-        inertiaYawVelocity *= 1.0f - response * 0.12f;
-        inertiaPitchVelocity *= 1.0f - response * 0.12f;
+        inertiaYawVelocity += (deltaYaw - inertiaYawVelocity) * normalizedResponse;
+        inertiaPitchVelocity += (deltaPitch - inertiaPitchVelocity) * normalizedResponse;
+        inertiaYawVelocity *= yawDecay;
+        inertiaPitchVelocity *= pitchDecay;
 
         float nextYaw = MathHelper.wrapDegrees(currentYaw + inertiaYawVelocity);
         float nextPitch = MathHelper.clamp(currentPitch + inertiaPitchVelocity, -90.0f, 90.0f);
